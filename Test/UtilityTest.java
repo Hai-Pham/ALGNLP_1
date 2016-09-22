@@ -221,4 +221,17 @@ public class UtilityTest {
         System.out.println("Done!");
     }
 
+    @Test
+    public void listTest() {
+        String s1 = "a b c a b c";
+        List<String> testList = new ArrayList<>(Arrays.asList(s1.split(" ")));
+//        testList.add("a b c ");
+//        testList.add("d e f ");
+//        testList.add("g h i");
+
+        System.out.println("Size of list is " + testList.size());
+        System.out.println(testList.get(0));
+        System.out.println(testList.get(1));
+        System.out.println(testList.get(testList.size()-1));
+    }
 }

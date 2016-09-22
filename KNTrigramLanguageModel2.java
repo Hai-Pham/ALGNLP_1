@@ -24,7 +24,7 @@ public class KNTrigramLanguageModel2 implements NgramLanguageModel {
     static final String START = NgramLanguageModel.START;
 
     // constant D for smoothing
-    static final double D = 0.01;
+    static final double D = 0.75;
 
     // N - made public for small test
     public long totalUnigram = 0;
@@ -54,72 +54,108 @@ public class KNTrigramLanguageModel2 implements NgramLanguageModel {
             sent++;
             if (sent % 100000 == 0) System.out.println("On sentence " + sent);
             List<String> stoppedSentence = new ArrayList<String>(sentence);
-            stoppedSentence.add(0, START);
+//            stoppedSentence.add(0, START);
             stoppedSentence.add(0, START);
             stoppedSentence.add(STOP);
 
             for (int i=0; i<stoppedSentence.size(); i++){
 
-                // process unigram
-                String unigramWord = stoppedSentence.get(i);
-                int indexUnigramWord = EnglishWordIndexer.getIndexer().addAndGetIndex(unigramWord);
+                // process unigram word which is w3 in w1w2w3 trigram
+                String w3 = stoppedSentence.get(i);
+                int idxW3 = EnglishWordIndexer.getIndexer().addAndGetIndex(w3);
 //                    System.out.println("PROCESSING " + unigramWord + " with index = " + indexUnigvramWord); // DEBUG
-                unigramMap.incrementValue(indexUnigramWord, 1);
+                unigramMap.incrementValue(idxW3, 1);
                 totalUnigram++;
 
-                if (i == 0) // unigram
-                    unigramMap.incrementStart(indexUnigramWord, 1);
+                if (i == 0) { // unigram, no duplication at the time of 0
+//                    System.out.println("~Adding " + w3);
+                    unigramMap.incrementStart(idxW3, 1);
+                }
                 else if (i == 1) { //bigram
-                    unigramMap.incrementEnd(indexUnigramWord, 1);
+                    int idxW2 = EnglishWordIndexer.getIndexer().addAndGetIndex(stoppedSentence.get(i-1));
+                    long indexBigram = Assignment1Utility.bitPackingBigram(idxW2, idxW3);
+                    if (bigramMap.getValue(indexBigram) == 0 ) //w2w3 = .w3 dup?
+                        unigramMap.incrementEnd(idxW3, 1);
 
                     // process bigram with format w1-w2 = bigramWord-unigramWord
-                    String bigramWord = stoppedSentence.get(i-1);
-                    int indexBigramWord = EnglishWordIndexer.getIndexer().addAndGetIndex(bigramWord);
-                    long indexBigram = Assignment1Utility.bitPackingBigram(indexBigramWord, indexUnigramWord);
+//                    System.out.println("**Adding + " + stoppedSentence.get(i-1) + w3);
                     bigramMap.incrementValue(indexBigram, 1);
                     totalBigram++;
 
                     if (i < stoppedSentence.size() - 1) {
-                        unigramMap.incrementStart(indexUnigramWord, 1);
-                        unigramMap.incrementBetween(indexUnigramWord, 1);
-                        bigramMap.incrementStart(indexBigram, 1);
+                        int idxW4 = EnglishWordIndexer.getIndexer().addAndGetIndex(stoppedSentence.get(i+1));
+                        long bigramStartsFromW3 = Assignment1Utility.bitPackingBigram(idxW3, idxW4); //w3w4
+
+                        if (bigramMap.getValue(bigramStartsFromW3) == 0 ) //w2w3 = .w3 dup? fix this
+                            unigramMap.incrementStart(idxW3, 1); // count w2.
+
+                        long trigramStartsFromW2 = Assignment1Utility.bitPackingTrigram(idxW2, idxW3, idxW4);
+                        if (trigramMap.get(trigramStartsFromW2) == 0) {
+                            unigramMap.incrementBetween(idxW3, 1);
+                            bigramMap.incrementStart(indexBigram, 1);
+                        }
                     }
-                } else if (i == stoppedSentence.size() -1) {
-                    unigramMap.incrementEnd(indexUnigramWord, 1);
-                    // TODO: refactor these 4 lines
-                    String bigramWord = stoppedSentence.get(i-1);
-                    int indexBigramWord = EnglishWordIndexer.getIndexer().addAndGetIndex(bigramWord);
-                    long indexBigram = Assignment1Utility.bitPackingBigram(indexBigramWord, indexUnigramWord);
+                } else if (i == stoppedSentence.size()-1) { // </s>
+                    // TODO: check this
+//                    System.out.println("xxxxxxxxx processing last word which is " + stoppedSentence.get(i));
+                    String w2 = stoppedSentence.get(i-1);
+                    int idxW2 = EnglishWordIndexer.getIndexer().addAndGetIndex(w2);
+                    long indexBigram = Assignment1Utility.bitPackingBigram(idxW2, idxW3);
+
+//                    System.out.println("xxxxxxxxx #" + w2 + "+" + w3 + "=" + bigramMap.getValue(indexBigram));
+                    if (bigramMap.getValue(indexBigram) == 0) {//w2w3 -> .w3
+                        unigramMap.incrementEnd(idxW3, 1);
+//                        System.out.println("xxxxxxxxx Not found " + w2 + "+" + w3 + " now increasing bigram ends with " + "w3");
+                    }
+
+//                    System.out.println("xxxxxxxxx Adding " + w2 + "+" + w3);
                     bigramMap.incrementValue(indexBigram, 1);
                     totalBigram++;
 
                     if (i >= 2) {
-                        String trigramWord = stoppedSentence.get(i-2);
-                        int indexTrigramWord = EnglishWordIndexer.getIndexer().addAndGetIndex(trigramWord);
-                        long indexTrigram = Assignment1Utility.bitPackingTrigram(indexTrigramWord, indexBigramWord, indexUnigramWord);
+                        String w1 = stoppedSentence.get(i-2);
+                        int idxW1 = EnglishWordIndexer.getIndexer().addAndGetIndex(w1);
+                        long indexTrigram = Assignment1Utility.bitPackingTrigram(idxW1, idxW2, idxW3);
+
+                        // check duplication before adding
+//                        System.out.println("xxxxxxxxx #" + w1 + w2 + "+" + w3 + "=" + trigramMap.get(indexTrigram));
+                        if (trigramMap.get(indexTrigram) == 0) //w1w2w3 = .w2w3
+                            bigramMap.incrementEnd(indexBigram, 1);
+
+//                        System.out.println("xxxxxxxxx Adding " + w1 + "+" + w2 + "+" + w3);
                         trigramMap.increment(indexTrigram, 1);
                         totalTrigram++;
-
-                        bigramMap.incrementEnd(indexBigram, 1);
                     }
                 } else {
-                    // i >= 2 & i <= l-2
-                    unigramMap.incrementEnd(indexUnigramWord ,1);
-                    unigramMap.incrementStart(indexUnigramWord, 1);
-                    unigramMap.incrementBetween(indexUnigramWord, 1);
+                    String w2 = stoppedSentence.get(i-1); //w2
+                    int idxW2 = EnglishWordIndexer.getIndexer().addAndGetIndex(w2);
+                    long indexBigram = Assignment1Utility.bitPackingBigram(idxW2, idxW3);//w2w3
+                    // process trigram with format w3-w2-w1 = tri-bi-unigramWord
+                    String w1 = stoppedSentence.get(i-2); //w1
+                    int idxW1 = EnglishWordIndexer.getIndexer().addAndGetIndex(w1);
+                    long indexTrigram = Assignment1Utility.bitPackingTrigram(idxW1, idxW2, idxW3);//w1w2w3
 
-                    String bigramWord = stoppedSentence.get(i-1);
-                    int indexBigramWord = EnglishWordIndexer.getIndexer().addAndGetIndex(bigramWord);
-                    long indexBigram = Assignment1Utility.bitPackingBigram(indexBigramWord, indexUnigramWord);
+                    // i >= 2 & i <= l-2
+                    if (bigramMap.getValue(indexBigram) == 0 ) //w2w3 = .w3 dup?
+                        unigramMap.incrementEnd(idxW3 ,1);
+                    int idxW4 = EnglishWordIndexer.getIndexer().addAndGetIndex(stoppedSentence.get(i+1)); //w4
+                    long indexBigramFromThis = Assignment1Utility.bitPackingBigram(idxW3, idxW4); //w3w4 = w3.
+
+                    if (bigramMap.getValue(indexBigramFromThis) == 0) //w3w4 = w3. dup?
+                        unigramMap.incrementStart(idxW3, 1);
+                    long indexTrigramFromW2 = Assignment1Utility.bitPackingTrigram(idxW2, idxW3, idxW4); //w2w3w4 = .w3.
+                    if (trigramMap.get(indexTrigramFromW2) == 0) //w2w1w0 = .w1. dup?
+                        unigramMap.incrementBetween(idxW3, 1);
+
+//                    System.out.println("====Adding " + w2 + "+" +  w3);
                     bigramMap.incrementValue(indexBigram, 1);
                     totalBigram++;
-                    bigramMap.incrementEnd(indexBigram, 1);
-                    bigramMap.incrementStart(indexBigram, 1);
 
-                    // process trigram with format w3-w2-w1 = tri-bi-unigramWord
-                    String trigramWord = stoppedSentence.get(i-2);
-                    int indexTrigramWord = EnglishWordIndexer.getIndexer().addAndGetIndex(trigramWord);
-                    long indexTrigram = Assignment1Utility.bitPackingTrigram(indexTrigramWord, indexBigramWord, indexUnigramWord);
+                    if (trigramMap.get(indexTrigram) == 0) // .w2w3 dup?
+                        bigramMap.incrementEnd(indexBigram, 1); // w1w2w3 = .w2w3
+                    if (trigramMap.get(indexTrigramFromW2) == 0) // w1w2w3 = w1w2. dup?
+                        bigramMap.incrementStart(indexBigram, 1);
+
                     trigramMap.increment(indexTrigram, 1);
                     totalTrigram++;
                 }

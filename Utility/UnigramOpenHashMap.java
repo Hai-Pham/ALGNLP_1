@@ -300,7 +300,7 @@ public class UnigramOpenHashMap {
         int currKey = keys[pos];
         // key is new
         if (currKey == EMPTY_KEY) {
-            putEnd(k, s);
+            putStart(k, s);
         } else
             bigramStartsWithThis[pos]++;
 
