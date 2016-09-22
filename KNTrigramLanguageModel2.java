@@ -24,7 +24,7 @@ public class KNTrigramLanguageModel2 implements NgramLanguageModel {
     static final String START = NgramLanguageModel.START;
 
     // constant D for smoothing
-    static final double D = 0.75;
+    static final double D = 0.01;
 
     // N - made public for small test
     public long totalUnigram = 0;
@@ -35,9 +35,9 @@ public class KNTrigramLanguageModel2 implements NgramLanguageModel {
     public long bigramVocabSize = 0;
     public long trigramVocabSize = 0;
     // Counters - made public for small test
-    public UnigramOpenHashMap unigramMap = new UnigramOpenHashMap(100000);
-    public BigramOpenHashMap bigramMap = new BigramOpenHashMap(1000000);
-    public LongIntOpenHashMap trigramMap = new LongIntOpenHashMap(10000000);
+    public UnigramOpenHashMap unigramMap = new UnigramOpenHashMap(50000);
+    public BigramOpenHashMap bigramMap = new BigramOpenHashMap(100000);
+    public LongIntOpenHashMap trigramMap = new LongIntOpenHashMap(1000000);
 
     /**
      * Constructor
@@ -54,6 +54,7 @@ public class KNTrigramLanguageModel2 implements NgramLanguageModel {
             sent++;
             if (sent % 100000 == 0) System.out.println("On sentence " + sent);
             List<String> stoppedSentence = new ArrayList<String>(sentence);
+            stoppedSentence.add(0, START);
             stoppedSentence.add(0, START);
             stoppedSentence.add(STOP);
 
@@ -201,11 +202,11 @@ public class KNTrigramLanguageModel2 implements NgramLanguageModel {
         return knScoreTrigram(ngram, to);
     }
 
-    private double baseCase(int[] ngram, int to) {
-        int count = unigramMap.getValue(ngram[to-1]); //w3
-        System.out.println("count=" + count + " over " + totalUnigram);
-        return (count + 1) / (double)(totalUnigram + unigramMap.size());
-    }
+//    private double baseCase(int[] ngram, int to) {
+//        int count = unigramMap.getValue(ngram[to-1]); //w3
+//        System.out.println("count=" + count + " over " + totalUnigram);
+//        return (count + 1) / (double)(totalUnigram + unigramMap.size());
+//    }
 
     private double knScoreUnigram(int[] ngram, int to) {
 //        int count = unigramMap.getValue(ngram[to-1]); //w3
@@ -232,6 +233,7 @@ public class KNTrigramLanguageModel2 implements NgramLanguageModel {
         bigramKNScore += numerator / (double) countInBetweenW2;
         bigramKNScore += calculateAlphaUnigram(ngram[to-2]) * knScoreUnigram(ngram, to);
 
+//        System.out.println("Bigram calc: numer=" + numerator + " denor=" + countInBetweenW2 + " knScore unigram");
         return bigramKNScore;
     }
     private double knScoreTrigram(int[] ngram, int to) {
@@ -248,7 +250,7 @@ public class KNTrigramLanguageModel2 implements NgramLanguageModel {
         double numerator = SloppyMath.max((double)trigramMap.get(trigramBitPacking) - D, 0.0);
         trigramKNScore += numerator / (double) countW1W2;
         trigramKNScore += calculateAlphaBigram(ngram[to-3], ngram[to-2]) * knScoreBigram(ngram, to);
-
+//        System.out.println("Calc Trigram: numer=" + numerator + " denor=" + countW1W2 + " bigram score");
         return trigramKNScore;
     }
     // alpha(w3)
@@ -257,6 +259,8 @@ public class KNTrigramLanguageModel2 implements NgramLanguageModel {
         double alpha = D;
         alpha *= unigramMap.getBigramStartsWithThis(idxW2); //fertility
         alpha /= (double) unigramMap.getBigramWithThisInBetween(idxW2);
+//        System.out.println("----alpha uni calc:  numer=" + unigramMap.getBigramStartsWithThis(idxW2) + " denor=" +
+//                unigramMap.getBigramWithThisInBetween(idxW2));
         return alpha;
     }
     // alpha(w2w3)
@@ -268,6 +272,7 @@ public class KNTrigramLanguageModel2 implements NgramLanguageModel {
         long bigramBitPacking = Assignment1Utility.bitPackingBigram(idxW1, idxW2);
         alpha *= bigramMap.gettrigramStartsWithThis(bigramBitPacking); //fertility
         alpha /= (double) bigramMap.getValue(bigramBitPacking);
+//        System.out.println("--alpha bigram calc:  numer=" +  bigramMap.gettrigramStartsWithThis(bigramBitPacking) + " denor=" + bigramMap.getValue(bigramBitPacking));
         return alpha;
     }
 
