@@ -46,6 +46,7 @@ public class LongIntOpenHashMap {
         sizeInTheory = initialCapacity_;
     }
 
+
     private void rehash() {
         long[] newKeys = new long[keys.length * 3 / 2];
         int[] newValues = new int[values.length * 3 / 2];
@@ -62,7 +63,22 @@ public class LongIntOpenHashMap {
         keys = newKeys;
         values = newValues;
     }
-
+    public void rehash(double expandedRatio) {
+        long[] newKeys = new long[(int)(keys.length * expandedRatio)];
+        int[] newValues = new int[(int)(values.length * expandedRatio)];
+        Arrays.fill(newValues, 0);
+        Arrays.fill(newKeys, -1);
+        size = 0;
+        for (int i = 0; i < keys.length; ++i) {
+            long curr = keys[i];
+            if (curr != EMPTY_KEY) {
+                int val = values[i];
+                putHelp(curr, val, newKeys, newValues);
+            }
+        }
+        keys = newKeys;
+        values = newValues;
+    }
     private boolean putHelp(long k, int v, long[] keyArray, int[] valueArray) {
         int pos = getInitialPos(k, keyArray);
         long curr = keyArray[pos];
@@ -191,26 +207,28 @@ public class LongIntOpenHashMap {
         return keys.length;
     }
 
-//    /**
-//     * Optimization method to free up unused entries in this map
-//     *
-//     */
-//    public void optimizeStorage(){
-//        System.out.println("This map has the utilization of " + 100 * size() / (double) actualSize() + "%. Now optimizing...");
-//
-//        long[] newKeys = new long[size];
-//        int[] newValues = new int[size];
-//        int j = 0;
-//
-//        for (int i=0; i<values.length; i++) {
-//            if (values[i] != 0) {
-//                newKeys[j] = keys[i];
-//                newValues[j] = values[i];
-//                j++;
-//            }
-//        }
-//        // free up
-//        keys = newKeys;
-//        values = newValues;
-//    }
+    /**
+     * Optimization method to free up unused entries in this map
+     *
+     */
+    public void optimizeStorage(double expandedRatio){
+        System.out.println("This map has the utilization of " + 100 * size / (float) keys.length + "%. Now optimizing...");
+
+        long[] newKeys = new long[size];
+        int[] newValues = new int[size];
+        int j = 0;
+
+        for (int i=0; i<values.length; i++) {
+            if (values[i] != 0) {
+                newKeys[j] = keys[i];
+                newValues[j] = values[i];
+                j++;
+            }
+        }
+        // free up
+        keys = newKeys;
+        values = newValues;
+
+        rehash(expandedRatio);
+    }
 }

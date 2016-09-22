@@ -63,6 +63,23 @@ public class IntIntOpenHashMap {
         values = newValues;
     }
 
+    public void rehash(double expandedRatio) {
+        int[] newKeys = new int[ (int)(keys.length * expandedRatio)];
+        int[] newValues = new int[(int) (values.length * expandedRatio)];
+        Arrays.fill(newValues, -1);
+        Arrays.fill(newKeys, -1);
+        size = 0;
+        for (int i = 0; i < keys.length; ++i) {
+            int curr = keys[i];
+            if (curr != EMPTY_KEY) {
+                int val = values[i];
+                putHelp(curr, val, newKeys, newValues);
+            }
+        }
+        keys = newKeys;
+        values = newValues;
+    }
+
     private boolean putHelp(int k, int v, int[] keyArray, int[] valueArray) {
         int pos = getInitialPos(k, keyArray);
         int curr = keyArray[pos];
@@ -199,7 +216,7 @@ public class IntIntOpenHashMap {
      * Optimization method to free up unused entries in this map
      *
      */
-    public void optimizeStorage(){
+    public void optimizeStorage(double expandedRatio){
         System.out.println("This map has the utilization of " + 100 * size() / (double) actualSize() + "%. Now optimizing...");
 
         int[] newKeys = new int[size];
@@ -215,7 +232,8 @@ public class IntIntOpenHashMap {
         }
         // free up
         keys = newKeys;
-        values = newValues;
+
+        rehash(expandedRatio);
     }
 }
 

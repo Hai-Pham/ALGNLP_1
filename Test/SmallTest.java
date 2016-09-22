@@ -1,13 +1,11 @@
 package edu.berkeley.nlp.assignments.assign1.student.Test;
 
-import edu.berkeley.nlp.assignments.assign1.student.KNTrigramLanguageModel2;
+import edu.berkeley.nlp.assignments.assign1.student.KNTrigramLanguageModel;
 import edu.berkeley.nlp.assignments.assign1.student.Utility.*;
 import edu.berkeley.nlp.langmodel.EnglishWordIndexer;
 import org.junit.Test;
 
 import java.util.*;
-
-import static org.junit.Assert.*;
 
 /**
  * Created by Gorilla on 9/15/2016.
@@ -261,7 +259,7 @@ public class SmallTest {
 //    @Test
 //    public void KNTrigramLanguageModelCONSTRUCTORTest(){
 //        ArrayList<List<String>> sentences = prepareSmallCorpus();
-//        KNTrigramLanguageModel2 languageModel = new KNTrigramLanguageModel2(sentences);
+//        KNTrigramLanguageModel languageModel = new KNTrigramLanguageModel(sentences);
 //
 ////        assertEquals(languageModel.unigramVocabSize, 8);
 //        assertEquals(languageModel.totalUnigram, 18);
@@ -375,7 +373,7 @@ public class SmallTest {
     @Test
     public void KNTrigramLanguageModel2CONSTRUCTORTest(){
         ArrayList<List<String>> sentences = prepareSmallCorpus();
-        KNTrigramLanguageModel2 languageModel = new KNTrigramLanguageModel2(sentences);
+        KNTrigramLanguageModel languageModel = new KNTrigramLanguageModel(sentences);
 
 //        assertEquals(languageModel.unigramVocabSize, 8);
 //        assertEquals(languageModel.bigramVocabSize, 10);
@@ -419,7 +417,7 @@ public class SmallTest {
 //    @Test
 //    public void KNNaiveTrigramLanguageModelCOUNTTest() {
 //        ArrayList<List<String>> sentences = prepareSmallCorpus();
-//        KNTrigramLanguageModel2 languageModel = new KNTrigramLanguageModel2(sentences);
+//        KNTrigramLanguageModel languageModel = new KNTrigramLanguageModel(sentences);
 //
 //        // count unigram
 //        assertEquals(languageModel.getCount(new int[]{1}), 3); // a
@@ -444,7 +442,7 @@ public class SmallTest {
     @Test
     public void KNNaiveTrigramLanguageModelLOG_PROBABILITYTest() {
         ArrayList<List<String>> sentences = prepareSmallCorpus();
-        KNTrigramLanguageModel2 languageModel = new KNTrigramLanguageModel2(sentences);
+        KNTrigramLanguageModel languageModel = new KNTrigramLanguageModel(sentences);
 
         System.out.println("Testing LOG PROBABILITY BEGINS");
         int[] unigramArray = new int[] {0, 1, 2, 3, 4, 5, 6, 7};

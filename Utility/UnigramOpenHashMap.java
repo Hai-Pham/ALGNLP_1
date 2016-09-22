@@ -121,6 +121,38 @@ public class UnigramOpenHashMap {
         bigramStartsWithThis = newBigramStartsWithThis;
         bigramWithThisInBetween = newBigramWithThisInBetween;
     }
+    public void rehash(double expandedRatio) {
+        int[] newKeys = new int[(int) (keys.length * expandedRatio)];
+        int[] newValues = new int[(int) (values.length * expandedRatio)];
+        int[] newBigramEndsWithThis = new int[(int) (values.length * expandedRatio)];
+        int[] newBigramStartsWithThis = new int[(int) (values.length * expandedRatio)];
+        int[] newBigramWithThisInBetween = new int[(int) (values.length * expandedRatio)];
+
+        Arrays.fill(newValues, 0);
+        Arrays.fill(newBigramEndsWithThis, 0);
+        Arrays.fill(newBigramStartsWithThis, 0);
+        Arrays.fill(newBigramWithThisInBetween, 0);
+        Arrays.fill(newKeys, -1);
+        size = 0;
+        for (int i = 0; i < keys.length; ++i) {
+            int curr = keys[i];
+            if (curr != EMPTY_KEY) {
+                int val = values[i];
+                int end = bigramEndsWithThis[i];
+                int start = bigramStartsWithThis[i];
+                int between = bigramWithThisInBetween[i];
+                // TODO: fix this
+                putHelp(curr, val, end, start, between, newKeys, newValues, newBigramEndsWithThis,
+                        newBigramStartsWithThis, newBigramWithThisInBetween);
+            }
+        }
+        // overwrite
+        keys = newKeys;
+        values = newValues;
+        bigramEndsWithThis = newBigramEndsWithThis;
+        bigramStartsWithThis = newBigramStartsWithThis;
+        bigramWithThisInBetween = newBigramWithThisInBetween;
+    }
 
     // order: value -> end -> start -> between
     private boolean putHelp(int k, int v, int end, int start, int between,
@@ -406,26 +438,28 @@ public class UnigramOpenHashMap {
     public int getTotalBigramEndsWithThis() {
         return totalBigramEndsWithThis;
     }
-//    /**
-//     * Optimization method to free up unused entries in this map
-//     *
-//     */
-//    public void optimizeStorage(){
-//        System.out.println("This map has the utilization of " + 100 * size() / (double) actualSize() + "%. Now optimizing...");
-//
-//        int[] newKeys = new int[size];
-//        int[] newValues = new int[size];
-//        int j = 0;
-//
-//        for (int i=0; i<values.length; i++) {
-//            if (keys[i] != -1) {
-//                newKeys[j] = keys[i];
-//                newValues[j] = values[i];
-//                j++;
-//            }
-//        }
-//        // free up
-//        keys = newKeys;
-//        values = newValues;
-//    }
+    /**
+     * Optimization method to free up unused entries in this map
+     *
+     */
+    public void optimizeStorage(double expandedRatio){
+        System.out.println("This map has the utilization of " + 100 * size() / (double) actualSize() + "%. Now optimizing...");
+
+        int[] newKeys = new int[size];
+        int[] newValues = new int[size];
+        int j = 0;
+
+        for (int i=0; i<values.length; i++) {
+            if (keys[i] != -1) {
+                newKeys[j] = keys[i];
+                newValues[j] = values[i];
+                j++;
+            }
+        }
+        // free up
+        keys = newKeys;
+        values = newValues;
+
+        rehash(expandedRatio);
+    }
 }

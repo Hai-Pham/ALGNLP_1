@@ -1,12 +1,10 @@
 package edu.berkeley.nlp.assignments.assign1.student;
 
 /**
- * Created by Gorilla on 9/17/2016.
+ * Created by Gorilla on 9/19/2016.
  */
 
-import edu.berkeley.nlp.assignments.assign1.student.Utility.Assignment1Utility;
-import edu.berkeley.nlp.assignments.assign1.student.Utility.IntIntOpenHashMap;
-import edu.berkeley.nlp.assignments.assign1.student.Utility.LongIntOpenHashMap;
+import edu.berkeley.nlp.assignments.assign1.student.Utility.*;
 import edu.berkeley.nlp.langmodel.EnglishWordIndexer;
 import edu.berkeley.nlp.langmodel.NgramLanguageModel;
 import edu.berkeley.nlp.math.SloppyMath;
@@ -24,24 +22,23 @@ public class KNTrigramLanguageModel implements NgramLanguageModel {
 
     static final String STOP = NgramLanguageModel.STOP;
     static final String START = NgramLanguageModel.START;
-    // N
-    static long totalUnigram = 0;
-    static long totalBigram = 0;
-    static long totalTrigram = 0;
-    // V
-    long unigramVocabSize = 0;
-    long bigramVocabSize = 0;
-    long trigramVocabSize = 0;
-    // Counters
-    IntIntOpenHashMap unigramMap = new IntIntOpenHashMap(100000);
-    LongIntOpenHashMap bigramMap = new LongIntOpenHashMap(1000000);
-    LongIntOpenHashMap trigramMap = new LongIntOpenHashMap(10000000);
 
-    // Counters for KN Smoothing
-    IntIntOpenHashMap bigramStartsWithCount = new IntIntOpenHashMap(100000);
-    IntIntOpenHashMap bigramEndsWithCount = new IntIntOpenHashMap(100000);
-    LongIntOpenHashMap trigramStartsWithCount = new LongIntOpenHashMap(100000); // trigram starts with w3w2
-    IntIntOpenHashMap trigramEndsWithCount = new IntIntOpenHashMap(100000); // w1w2w3 ends with w2w3 TODO: edit this
+    // constant D for smoothing
+    static final double D = 0.75;
+
+    // N - made public for small test
+    public long totalUnigram = 0;
+    public long totalBigram = 0;
+    public long totalTrigram = 0;
+    // V - made public for small test
+    public long unigramVocabSize = 0;
+    public long bigramVocabSize = 0;
+    public long trigramVocabSize = 0;
+    // Counters - made public for small test
+    public UnigramOpenHashMap unigramMap = new UnigramOpenHashMap(50000);
+    public BigramOpenHashMap bigramMap = new BigramOpenHashMap(100000);
+    public LongIntOpenHashMap trigramMap = new LongIntOpenHashMap(1000000);
+
     /**
      * Constructor
      * Declaration about the order of Ngrams
@@ -51,73 +48,147 @@ public class KNTrigramLanguageModel implements NgramLanguageModel {
      */
     public KNTrigramLanguageModel(Iterable<List<String>> sentenceCollection) {
 
-            System.out.println("Building KNTrigramLanguageModel . . .");
-            int sent = 0;
-            for (List<String> sentence : sentenceCollection) {
-                sent++;
-                if (sent % 1000000 == 0) System.out.println("On sentence " + sent);
-                List<String> stoppedSentence = new ArrayList<String>(sentence);
-                stoppedSentence.add(0, START);
-                stoppedSentence.add(STOP);
+        System.out.println("Building Knesser Ney Trigram Language Model . . .");
+        int sent = 0;
+        for (List<String> sentence : sentenceCollection) {
+            sent++;
+            if (sent % 100000 == 0) System.out.println("On sentence " + sent);
+            List<String> stoppedSentence = new ArrayList<String>(sentence);
+            stoppedSentence.add(0, START);
+            stoppedSentence.add(STOP);
 
-                for (int i=0; i<stoppedSentence.size(); i++){
-                    //update stats
-                    totalUnigram++;
-                    // process unigram
-                    String unigramWord = stoppedSentence.get(i);
-                    int indexUnigramWord = EnglishWordIndexer.getIndexer().addAndGetIndex(unigramWord);
-//                    System.out.println("PROCESSING " + unigramWord + " with index = " + indexUnigramWord); // DEBUG
-                    unigramMap.increment(indexUnigramWord, 1);
+            for (int i=0; i<stoppedSentence.size(); i++){
+                // process unigram word which is w3 in w1w2w3 trigram
+                String w3 = stoppedSentence.get(i);
+                int idxW3 = incrementValueUnigramMap(w3);
 
-                    if (i == 0) continue;
-                    else if (i == 1) {
-                        // process bigram with format w1-w2 = bigramWord-unigramWord
-                        String bigramWord = stoppedSentence.get(i - 1);
-                        processBigramWord(unigramWord, bigramWord, indexUnigramWord);
-                    } else {
-                        // process bigram with format w2-w1 = bigramWord-unigramWord
-                        String bigramWord = stoppedSentence.get(i-1);
-                        int indexBigramWord = processBigramWord(unigramWord, bigramWord, indexUnigramWord);
-                        // process trigram with format w3-w2-w1 = tri-bi-unigramWord
-                        String trigramWord = stoppedSentence.get(i - 2);
-                        processTrigramWord(trigramWord, indexBigramWord, indexUnigramWord);
-                    }
+                if (i == 0) { // unigram, no duplication at the time of 0
+                    unigramMap.incrementStart(idxW3, 1);
+                } else if (i == 1) { //bigram
+                    calculateAtSecondTokenOfSentence(stoppedSentence, i, idxW3);
+                } else if (i == stoppedSentence.size()-1) { // </s>
+                    calculateAtTheLastTokenOfSentence(stoppedSentence, i, idxW3);
+                } else {
+                    calculateTokensInTheMiddleOfSentence(stoppedSentence, i, idxW3);
                 }
             }
+        }
         // consolidating vocabulary for each n-gram
         consolidateStats();
         debugToConsole();
+        optimizeStorage();
+        debugToConsole();
+    }
+    // BEGIN - helper methods for constructor
+    private void calculateTokensInTheMiddleOfSentence(List<String> stoppedSentence, int i, int idxW3) {
+        int idxW2 = EnglishWordIndexer.getIndexer().addAndGetIndex(stoppedSentence.get(i-1));
+        long indexBigram = Assignment1Utility.bitPackingBigram(idxW2, idxW3);//w2w3
+        long indexTrigram = getIndexTrigram(stoppedSentence, i, idxW3, idxW2); //w1w2w3
+        incrementEndUnigramMap(idxW3, indexBigram);
+
+        int idxW4 = EnglishWordIndexer.getIndexer().addAndGetIndex(stoppedSentence.get(i+1)); //w4
+        long indexBigramFromThis = Assignment1Utility.bitPackingBigram(idxW3, idxW4); //w3w4 = w3.
+        incrementStartUnigramMap(idxW3, indexBigramFromThis);
+
+        long trigramStartsFromW2 = Assignment1Utility.bitPackingTrigram(idxW2, idxW3, idxW4); //w2w3w4 = .w3.
+        incrementBetweenUnigramMap(idxW3, trigramStartsFromW2);
+        incrementValueBigramMap(indexBigram);
+        incrementEndBigramMap(indexBigram, indexTrigram);
+        incrementStartBigramMap(indexBigram, trigramStartsFromW2);
+        incrementValueTrigramMap(indexTrigram);
     }
 
-    //BEGIN - helper methods for constructor
-    private int processBigramWord(String unigramWord, String bigramWord, int indexUnigramWord) {
-        int indexBigramWord = EnglishWordIndexer.getIndexer().addAndGetIndex(bigramWord);
-//        System.out.println("--BIGRAM PROCESSING " + bigramWord + " with index = " + indexBigramWord); // DEBUG
-        //encode w2w1 -> encoded to w1w2 with w2 is the context
-        long bigramEncoded = Assignment1Utility.bitPackingBigram(indexBigramWord, indexUnigramWord);
-        bigramMap.increment(bigramEncoded, 1);
-        //count N1+ for KN Smoothing
-        bigramEndsWithCount.increment(indexUnigramWord, 1);
-        bigramStartsWithCount.increment(indexBigramWord, 1);
-        //update stats
-        totalBigram++;
-        return indexBigramWord;
+    private void calculateAtTheLastTokenOfSentence(List<String> stoppedSentence, int i, int idxW3) {
+        String w2 = stoppedSentence.get(i-1);
+        int idxW2 = EnglishWordIndexer.getIndexer().addAndGetIndex(w2);
+        long indexBigram = Assignment1Utility.bitPackingBigram(idxW2, idxW3);
+        incrementEndUnigramMap(idxW3, indexBigram);
+        incrementValueBigramMap(indexBigram);
+
+        if (i >= 2) {
+            long indexTrigram = getIndexTrigram(stoppedSentence, i, idxW3, idxW2);
+            incrementEndBigramMap(indexBigram, indexTrigram);
+            incrementValueTrigramMap(indexTrigram);
+        }
     }
-    private int processTrigramWord(String trigramWord, int indexBigramWord, int indexUnigramWord) {
-        int indexTrigramWord = EnglishWordIndexer.getIndexer().addAndGetIndex(trigramWord);
-//        System.out.println("---TRIGRAM PROCESSING " + trigramWord + " with index = " + indexTrigramWord); // DEBUG
-        //encode w3w2w1 ->encoded to w1w3w2 with w3w2 is the context
-        long trigramEncoded = Assignment1Utility.bitPackingTrigram(indexTrigramWord, indexBigramWord, indexUnigramWord);
-        trigramMap.increment(trigramEncoded, 1);
-        //count N1+ for KN Smoothing
-        trigramEndsWithCount.increment(indexUnigramWord, 1);
-        //encode
-        long triBigramBitPacking = Assignment1Utility.bitPackingBigram(indexTrigramWord, indexBigramWord);
-//        trigramStartsWithCount.increment(indexTrigramWord, 1);
-        trigramStartsWithCount.increment(triBigramBitPacking, 1);
-        // update stats
+
+    private void calculateAtSecondTokenOfSentence(List<String> stoppedSentence, int i, int idxW3) {
+        int idxW2 = EnglishWordIndexer.getIndexer().addAndGetIndex(stoppedSentence.get(i-1));
+        long indexBigram = Assignment1Utility.bitPackingBigram(idxW2, idxW3);
+        incrementEndUnigramMap(idxW3, indexBigram);
+        incrementValueBigramMap(indexBigram);
+
+        if (i < stoppedSentence.size() - 1) {
+            int idxW4 = EnglishWordIndexer.getIndexer().addAndGetIndex(stoppedSentence.get(i+1));
+            long bigramStartsFromW3 = Assignment1Utility.bitPackingBigram(idxW3, idxW4); //w3w4
+            incrementStartUnigramMap(idxW3, bigramStartsFromW3);
+
+            long trigramStartsFromW2 = Assignment1Utility.bitPackingTrigram(idxW2, idxW3, idxW4);
+            incrementBetweenUnigramMap(idxW3, trigramStartsFromW2);
+            incrementStartBigramMap(indexBigram, trigramStartsFromW2);
+        }
+    }
+
+    private long getIndexTrigram(List<String> stoppedSentence, int i, int idxW3, int idxW2) {
+        String w1 = stoppedSentence.get(i-2);
+        int idxW1 = EnglishWordIndexer.getIndexer().addAndGetIndex(w1);
+        return Assignment1Utility.bitPackingTrigram(idxW1, idxW2, idxW3);
+    }
+
+    private void incrementBetweenUnigramMap(int idxW3, long trigramStartsFromW2) {
+        if (trigramMap.get(trigramStartsFromW2) == 0) {
+            unigramMap.incrementBetween(idxW3, 1);
+        }
+    }
+
+    private void incrementStartUnigramMap(int idxW3, long indexBigramFromThis) {
+        if (bigramMap.getValue(indexBigramFromThis) == 0) //w3w4 = w3. dup?
+            unigramMap.incrementStart(idxW3, 1);
+    }
+
+    private void incrementStartBigramMap(long indexBigram, long trigramStartsFromW2) {
+        if (trigramMap.get(trigramStartsFromW2) == 0) // w1w2w3 = w1w2. dup?
+            bigramMap.incrementStart(indexBigram, 1);
+    }
+
+    private void incrementEndBigramMap(long indexBigram, long indexTrigram) {
+        // check duplication before adding
+        if (trigramMap.get(indexTrigram) == 0) //w1w2w3 = .w2w3
+            bigramMap.incrementEnd(indexBigram, 1);
+    }
+
+    private void incrementEndUnigramMap(int idxW3, long indexBigram) {
+        if (bigramMap.getValue(indexBigram) == 0 ) //w2w3 = .w3 dup?
+            unigramMap.incrementEnd(idxW3, 1);
+    }
+
+    private void incrementValueTrigramMap(long indexTrigram) {
+        trigramMap.increment(indexTrigram, 1);
         totalTrigram++;
-        return indexTrigramWord;
+    }
+
+    private void incrementValueBigramMap(long indexBigram) {
+        // process bigram with format w1-w2 = bigramWord-unigramWord
+        bigramMap.incrementValue(indexBigram, 1);
+        totalBigram++;
+    }
+
+    private int incrementValueUnigramMap(String w3) {
+        int idxW3 = EnglishWordIndexer.getIndexer().addAndGetIndex(w3);
+        unigramMap.incrementValue(idxW3, 1);
+        totalUnigram++;
+        return idxW3;
+    }
+
+    private void optimizeStorage() {
+        System.out.println("Optimizing storage for hash maps...");
+//        unigramMap.optimizeStorage(1.2);
+//        bigramMap.optimizeStorage(1.2);
+//        trigramMap.optimizeStorage(1.2);
+        unigramMap.rehash(0.7);
+        bigramMap.rehash(0.8);
+        trigramMap.rehash(0.75);
+        System.out.println("Optimization complete!");
     }
     private void consolidateStats(){
         unigramVocabSize = unigramMap.size();
@@ -127,9 +198,10 @@ public class KNTrigramLanguageModel implements NgramLanguageModel {
     private void debugToConsole() {
         System.out.println("Done building KNNaiveTrigramLanguageModel.");
         System.out.println("-------------STATS------------");
-        System.out.println("Number of unigram vocab=" + unigramVocabSize + " and total unigram=" + totalUnigram);
-        System.out.println("Number of bigram vocab=" + bigramVocabSize + " and total bigram=" + totalBigram);
-        System.out.println("Number of trigram vocab=" + trigramVocabSize + " and total trigram=" + totalTrigram);
+        System.out.println("Number of unigram vocab=" + unigramVocabSize + " and total unigram=" + totalUnigram + " and actual size=" + unigramMap.actualSize());
+        System.out.println("Number of total BigramEndsWith a word is " + unigramMap.getTotalBigramEndsWithThis());
+        System.out.println("Number of bigram vocab=" + bigramVocabSize + " and total bigram=" + totalBigram + " and actual size=" + bigramMap.actualSize());
+        System.out.println("Number of trigram vocab=" + trigramVocabSize + " and total trigram=" + totalTrigram + " and actual size=" + trigramMap.actualSize());
         System.out.println("-------------END OF STATS------------");
     }
     // END - helper methods for constructor
@@ -146,8 +218,8 @@ public class KNTrigramLanguageModel implements NgramLanguageModel {
 
         if (ngram.length == 1) {
             int key = ngram[0];
-            int count = unigramMap.get(key);
-            if (count == -10) return 0; // not found
+            int count = unigramMap.getValue(key);
+            if (count == -1) return 0; // not found TODO: check whether this is redundant
             return count;
         }
         if (ngram.length == 2) {
@@ -155,8 +227,8 @@ public class KNTrigramLanguageModel implements NgramLanguageModel {
             int idxBigramWord = ngram[0];
             int idxUnigramWord = ngram[1];
             long bigramBitPacking = Assignment1Utility.bitPackingBigram(idxBigramWord, idxUnigramWord);
-            int count = bigramMap.get(bigramBitPacking);
-            if (count == -10) return 0; // not found
+            int count = bigramMap.getValue(bigramBitPacking);
+            if (count == -1) return 0; // not found
             return count;
         }
 
@@ -166,148 +238,81 @@ public class KNTrigramLanguageModel implements NgramLanguageModel {
         final int idxUnigramWord = ngram[2];
         long trigramBitPacking = Assignment1Utility.bitPackingTrigram(idxTrigramWord, idxBigramWord, idxUnigramWord);
         int count = trigramMap.get(trigramBitPacking);
-        if (count == -10) return 0; // not found
+        if (count == -1) return 0; // not found
         return count;
     }
 
     @Override
     public double getNgramLogProbability(int[] ngram, int from, int to) {
         // swith among various methods of smoothing to investigate
-        return knSmoothing(ngram, from, to);
+        return Math.log(knScoreGeneral(ngram, from, to) + 1e-20);
     }
 
-    /**
-     *
-     * @param ngram: an array containing IDs
-     * @param from
-     * @param to
-     * @return
-     */
-    public double knSmoothing(int[] ngram, int from, int to){
-        double D = 0.75;
+    public double knScoreGeneral(int[] ngram, int from, int to) {
         int order = to - from;
-        int contextCount = 0;
-        double knScore = 0L;
+        if (order == 1)
+            return knScoreUnigram(ngram, to);
+        if (order == 2)
+            return knScoreBigram(ngram, to);
 
-        if ((order > 3) || (order == 0) || (to < 1)) {
-            System.out.println("WARNING: to - from > 3 for NaiveTrigramLanguageModel");
-        }
-        // Base case: Unigram
-        if (order == 1) return baseCaseKN(ngram, to);
+        return knScoreTrigram(ngram, to);
+    }
 
-        contextCount = contextCountKN(ngram, from, order);
-        //recursively back off
-        if (contextCount == 0) {
-//            System.out.println("Backing off 1 from idx=" + to + "..."); // DEBUG
-//            return knSmoothing(context, from, to - 1);
-            return knSmoothing(ngram, from+1, to);
-        }
-        else {
-            long ngramCount = getExactCountNgram(ngram, from, order);
-            if (order == 3)
-                knScore += SloppyMath.max(ngramCount - D, 0) / (double) contextCount;
-            else {
-                // order == 2
+    private double knScoreUnigram(int[] ngram, int to) {
+        int count = unigramMap.getBigramEndsWithThis(ngram[to-1]); //w3
+        if (count == 0)
+            return 1e-20;
+        else
+            return unigramMap.getBigramEndsWithThis(ngram[to-1]) / (double) unigramMap.getTotalBigramEndsWithThis();
+    }
+    private double knScoreBigram(int[] ngram, int to) {
+        // count denominator to back-off in edge case
+        int countInBetweenW2 = unigramMap.getBigramWithThisInBetween(ngram[to-2]); // count(.w2.)
+        if (countInBetweenW2 == 0)
+            return knScoreUnigram(ngram, to); // complete back-off
 
-            }
-            //TODO: calculate these 2
-            double alpha = calculateAlpha(ngram, from, order, D);
-            double continuationProb = calculateContinuationProb(ngram, from, order);
-            // interpolation version of KN smoothing
-            knScore += alpha * continuationProb;
-        }
-//        System.out.println("KN sum = " + knScore + " and score = " + Math.log(knScore)); // DEBUG
+        double bigramKNScore = 0.0;
 
-        if (knScore == 0)
-            return 0;
-        return Math.log(knScore);
+        //encode bigram (as a continuation) for numerator W2W3
+        long bigramBitPacking = Assignment1Utility.bitPackingBigram(ngram[to-2], ngram[to-1]);
+        double numerator = SloppyMath.max((double)bigramMap.gettrigramEndsWithThis(bigramBitPacking) - D, 0.0);
+
+        bigramKNScore += numerator / (double) countInBetweenW2;
+        bigramKNScore += calculateAlphaUnigram(ngram[to-2]) * knScoreUnigram(ngram, to);
+
+        return bigramKNScore;
     }
-    public double knSmoothing2(int[] ngram, int from, int to){
-        return 0L;
+    private double knScoreTrigram(int[] ngram, int to) {
+
+        // edge case -> back off
+        long bigramBitPacking = Assignment1Utility.bitPackingBigram(ngram[to-3], ngram[to-2]); //w1w2
+        int countW1W2 = bigramMap.getValue(bigramBitPacking);
+        if (countW1W2 == 0)
+            return knScoreBigram(ngram, to); // complete back off
+
+        double trigramKNScore = 0.0;
+        //encode trigram
+        long trigramBitPacking = Assignment1Utility.bitPackingTrigram(ngram[to-3], ngram[to-2], ngram[to-1]);
+        double numerator = SloppyMath.max((double)trigramMap.get(trigramBitPacking) - D, 0.0);
+        trigramKNScore += numerator / (double) countW1W2;
+        trigramKNScore += calculateAlphaBigram(ngram[to-3], ngram[to-2]) * knScoreBigram(ngram, to);
+        return trigramKNScore;
     }
-    // BEGIN - helper methods for knsmoothing
-    private double baseCaseKN(int[] ngram, int to) {
-//        int countUnigram = unigramMap.get(ngram[from]);
-        int countUnigram = unigramMap.get(ngram[to-1]);
-//        System.out.println("Base case, count for worddx=" + ngram[from] + " is " + countUnigram + " over " + totalUnigram); // DEBUG
-        if (countUnigram == 0)
-            //TODO: use Good Turing?
-            return -20; // after Log
-        // TODO: consider to add 1 or not, pick from the mass for unseen word ?
-        return Math.log( countUnigram / ((double)totalUnigram + 1));
+    // alpha(w2)
+    private double calculateAlphaUnigram(int idxW2) {
+        double alpha = D;
+        alpha *= unigramMap.getBigramStartsWithThis(idxW2); //fertility
+        alpha /= (double) unigramMap.getBigramWithThisInBetween(idxW2);
+        return alpha;
     }
-    private int[] retrieveContext(int[] ngram) {
-        // retrieve context by copying from ngram (except the last id)
-        int[] context = new int[ngram.length - 1];
-        for (int i=0; i<ngram.length-1; i++)
-            context[i] = ngram[i];
-        return context;
+    // alpha(w1w2)
+    private double calculateAlphaBigram(int idxW1, int idxW2) {
+        double alpha = D;
+        //encode w1w2
+        long bigramBitPacking = Assignment1Utility.bitPackingBigram(idxW1, idxW2);
+        alpha *= bigramMap.gettrigramStartsWithThis(bigramBitPacking); //fertility
+        alpha /= (double) bigramMap.getValue(bigramBitPacking);
+        return alpha;
     }
-    private int contextCountKN(int[] ngram, int from, int order) {
-        int contextCount = 0;
-        //TODO: join uni-, bi- and tri-grams table at one and query at one, regardless the order
-        if (order ==3) {
-            //encode
-            long bigramEncoded = Assignment1Utility.bitPackingBigram(ngram[from], ngram[from+1]);
-            contextCount = bigramMap.get(bigramEncoded);
-        } else {
-            // order == 2, encode
-            int idxUnigramWord = ngram[from];
-            contextCount = unigramMap.get(idxUnigramWord);
-        }
-        return contextCount;
-    }
-    private double calculateAlpha(int [] ngram, int from, int order, double D) {
-        if (order ==2) {
-            // normalizing over the bigram word (w2w1 => bigramWord = w2, unigramword = w1)
-            int idxBigramWord = ngram[from];
-            int countBigramWord = unigramMap.get(idxBigramWord);
-            long numerator = (long) (D * bigramStartsWithCount.get(idxBigramWord));
-            return numerator / (double) countBigramWord;
-        } else {
-            // order == 3
-            // normalizing over the trigram word (w3w2w1 => trigramWord = w3, bigramWord = w2, unigramword = w1)
-            int idxTrigramWord = ngram[from];
-            int idxBigramWord = ngram[from+1];
-            //encode
-            long bigramBitPacking = Assignment1Utility.bitPackingBigram(idxTrigramWord, idxBigramWord);
-            int countTriBigram = bigramMap.get(bigramBitPacking); // denominator
-            long numerator = (long) (D * trigramStartsWithCount.get(bigramBitPacking));
-            return numerator / (double) countTriBigram;
-        }
-    }
-    private double calculateContinuationProb(int[] ngram, int from, int order) {
-        if (order == 2) {
-            // number of context follows ngram[1]
-            int idxBigramWord = ngram[from];
-            int idxUnigramWord = ngram[from+1];
-            //encode
-            long bigramBitPacking = Assignment1Utility.bitPackingBigram(idxBigramWord, idxUnigramWord);
-            long numerator = bigramEndsWithCount.get(idxUnigramWord);
-            return numerator / (double) bigramMap.get(bigramBitPacking);
-        } else {
-            // order == 3
-            int idxTrigramWord = ngram[from];
-            int idxBigramWord = ngram[from+1];
-            int idxUnigramWord = ngram[from+2];
-            //encode
-            long trigramBitPacking = Assignment1Utility.bitPackingTrigram(idxTrigramWord, idxBigramWord, idxUnigramWord);
-            long numerator = trigramEndsWithCount.get(idxUnigramWord);
-            return numerator / (double) trigramMap.get(trigramBitPacking);
-        }
-    }
-    /**
-     *
-     * @param ngram
-     * @param from
-     * @param order
-     */
-    private long getExactCountNgram(int[] ngram, int from, int order) {
-        int [] exactNgram = new int[order];
-        for (int i=0; i<order; i++)
-            exactNgram[i] = ngram[from+i];
-        long count = getCount(exactNgram);
-        return count;
-    }
-    // END - helper methods for knsmoothing
+
 }
