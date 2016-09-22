@@ -26,18 +26,18 @@ public class KNTrigramLanguageModel2 implements NgramLanguageModel {
     // constant D for smoothing
     static final double D = 0.75;
 
-    // N
-    static long totalUnigram = 0;
-    static long totalBigram = 0;
-    static long totalTrigram = 0;
-    // V
-    long unigramVocabSize = 0;
-    long bigramVocabSize = 0;
-    long trigramVocabSize = 0;
-    // Counters
-    UnigramOpenHashMap unigramMap = new UnigramOpenHashMap(100000);
-    BigramOpenHashMap bigramMap = new BigramOpenHashMap(1000000);
-    LongIntOpenHashMap trigramMap = new LongIntOpenHashMap(10000000);
+    // N - made public for small test
+    public long totalUnigram = 0;
+    public long totalBigram = 0;
+    public long totalTrigram = 0;
+    // V - made public for small test
+    public long unigramVocabSize = 0;
+    public long bigramVocabSize = 0;
+    public long trigramVocabSize = 0;
+    // Counters - made public for small test
+    public UnigramOpenHashMap unigramMap = new UnigramOpenHashMap(100000);
+    public BigramOpenHashMap bigramMap = new BigramOpenHashMap(1000000);
+    public LongIntOpenHashMap trigramMap = new LongIntOpenHashMap(10000000);
 
     /**
      * Constructor
@@ -139,6 +139,7 @@ public class KNTrigramLanguageModel2 implements NgramLanguageModel {
         System.out.println("Done building KNNaiveTrigramLanguageModel.");
         System.out.println("-------------STATS------------");
         System.out.println("Number of unigram vocab=" + unigramVocabSize + " and total unigram=" + totalUnigram + " and actual size=" + unigramMap.actualSize());
+        System.out.println("Number of total BigramEndsWith a word is " + unigramMap.getTotalBigramEndsWithThis());
         System.out.println("Number of bigram vocab=" + bigramVocabSize + " and total bigram=" + totalBigram + " and actual size=" + bigramMap.actualSize());
         System.out.println("Number of trigram vocab=" + trigramVocabSize + " and total trigram=" + totalTrigram + " and actual size=" + trigramMap.actualSize());
         System.out.println("-------------END OF STATS------------");
@@ -189,20 +190,32 @@ public class KNTrigramLanguageModel2 implements NgramLanguageModel {
         return Math.log(knScoreGeneral(ngram, from, to) + 1e-20);
     }
 
-    private double knScoreGeneral(int[] ngram, int from, int to) {
+    public double knScoreGeneral(int[] ngram, int from, int to) {
         int order = to - from;
         if (order == 1)
             return knScoreUnigram(ngram, to);
+//            return baseCase(ngram, to);
         if (order == 2)
             return knScoreBigram(ngram, to);
+
         return knScoreTrigram(ngram, to);
     }
+
+    private double baseCase(int[] ngram, int to) {
+        int count = unigramMap.getValue(ngram[to-1]); //w3
+        System.out.println("count=" + count + " over " + totalUnigram);
+        return (count + 1) / (double)(totalUnigram + unigramMap.size());
+    }
+
     private double knScoreUnigram(int[] ngram, int to) {
-        int count = unigramMap.getValue(ngram[to-1]);
+//        int count = unigramMap.getValue(ngram[to-1]); //w3
+        int count = unigramMap.getBigramEndsWithThis(ngram[to-1]); //w3
         if (count == 0)
             return 1e-20;
         else
-            return unigramMap.getBigramEndsWithThis(ngram[to-1]) / (double) bigramMap.size();
+//            return unigramMap.getBigramEndsWithThis(ngram[to-1]) / (double) bigramMap.size();
+//            return unigramMap.getBigramEndsWithThis(ngram[to-1]) / (double) totalBigram; //24.378
+            return unigramMap.getBigramEndsWithThis(ngram[to-1]) / (double) unigramMap.getTotalBigramEndsWithThis();
     }
     private double knScoreBigram(int[] ngram, int to) {
         // count denominator to back-off in edge case
@@ -238,92 +251,12 @@ public class KNTrigramLanguageModel2 implements NgramLanguageModel {
 
         return trigramKNScore;
     }
-
-
-
-
-
-
-
-
-    public double knSmoothingLogProb(int[] ngram, int from, int to){
-        // To calculate P(w1w2w3)
-        double knScore = 0L;
-        int order = to - from;
-
-        if (order == 1) {
-            // P(w3)
-            knScore += knScoreUnigram(ngram[to-1]);
-        } else if (order == 2) {
-            // P(w2w3)
-            knScore += knScoreBigram(ngram[to-2], ngram[to-1]);
-            // alpha(w3) * P_kn(w3)
-            // alpha for w3 but processing on w2
-            knScore += (calculateAlphaUnigram(ngram[to-2]) * knScoreUnigram(ngram[to-1]));
-        } else { // order == 3
-            // P(w1w2w3)
-            knScore += knScoreTrigram(ngram[to-3], ngram[to-2], ngram[to-1]);
-            // alpha(w2w3) * P_kn(w2w3)
-            // alpha for w2, w3 but processing on w1, w2
-            knScore  += (calculateAlphaBigram(ngram[to-3], ngram[to-2]) * knScoreBigram(ngram[to-2], ngram[to-1]));
-        }
-        return Math.log(knScore + 1e-20);
-    }
-    // P_kn(w3)
-    private double knScoreUnigram(int idxW3) {
-        int count = unigramMap.getValue(idxW3);
-
-        if (count == 0)
-            return 1e-20;
-        else
-            return unigramMap.getBigramEndsWithThis(idxW3) / (double) bigramMap.size();
-    }
-    // P_kn(w2 w3)
-    private double knScoreBigram(int idxW2, int idxW3) {
-        //encode bigram (as a continuation) for numerator
-        long bigramBitPacking = Assignment1Utility.bitPackingBigram(idxW2, idxW3);
-        double numerator = SloppyMath.max(bigramMap.gettrigramEndsWithThis(bigramBitPacking) - D, 0);
-
-        // count numerator to back-off in edge case
-        int countInBetweenW2 = unigramMap.getBigramWithThisInBetween(idxW2);
-        if (countInBetweenW2 == 0)
-            return knScoreUnigram(idxW3);
-
-        return numerator / (double) countInBetweenW2;
-    }
-    // P_kn(w1 w2 w3)
-    private double knScoreTrigram(int idxW1, int idxW2, int idxW3) {
-        //encode bigram as a context (w1w2)
-        long bigramBitPacking = Assignment1Utility.bitPackingBigram(idxW1, idxW2);
-
-        // edge case -> back off
-        int countW1W2 = bigramMap.getValue(bigramBitPacking);
-        if (countW1W2 == 0)
-            return knScoreBigram(idxW2, idxW3);
-
-        //encode trigram
-        long trigramBitPacking = Assignment1Utility.bitPackingTrigram(idxW1, idxW2, idxW3);
-        double numerator = SloppyMath.max(trigramMap.get(trigramBitPacking) - D, 0);
-
-        return numerator / (double) countW1W2;
-    }
-
-
-
-
-
-
     // alpha(w3)
     // parameter is w3 but processing on w2, index is passed correctly
     private double calculateAlphaUnigram(int idxW2) {
         double alpha = D;
         alpha *= unigramMap.getBigramStartsWithThis(idxW2); //fertility
         alpha /= (double) unigramMap.getBigramWithThisInBetween(idxW2);
-
-//        int c = unigramMap.getValue(idxW2);
-//        if (c == 0)
-//            return 1e-20;
-//        alpha /= (double) c;
         return alpha;
     }
     // alpha(w2w3)
@@ -337,6 +270,81 @@ public class KNTrigramLanguageModel2 implements NgramLanguageModel {
         alpha /= (double) bigramMap.getValue(bigramBitPacking);
         return alpha;
     }
+
+
+
+
+
+
+
+
+//    public double knSmoothingLogProb(int[] ngram, int from, int to){
+//        // To calculate P(w1w2w3)
+//        double knScore = 0L;
+//        int order = to - from;
+//
+//        if (order == 1) {
+//            // P(w3)
+//            knScore += knScoreUnigram(ngram[to-1]);
+//        } else if (order == 2) {
+//            // P(w2w3)
+//            knScore += knScoreBigram(ngram[to-2], ngram[to-1]);
+//            // alpha(w3) * P_kn(w3)
+//            // alpha for w3 but processing on w2
+//            knScore += (calculateAlphaUnigram(ngram[to-2]) * knScoreUnigram(ngram[to-1]));
+//        } else { // order == 3
+//            // P(w1w2w3)
+//            knScore += knScoreTrigram(ngram[to-3], ngram[to-2], ngram[to-1]);
+//            // alpha(w2w3) * P_kn(w2w3)
+//            // alpha for w2, w3 but processing on w1, w2
+//            knScore  += (calculateAlphaBigram(ngram[to-3], ngram[to-2]) * knScoreBigram(ngram[to-2], ngram[to-1]));
+//        }
+//        return Math.log(knScore + 1e-20);
+//    }
+//    // P_kn(w3)
+//    private double knScoreUnigram(int idxW3) {
+//        int count = unigramMap.getValue(idxW3);
+//
+//        if (count == 0)
+//            return 1e-20;
+//        else
+//            return unigramMap.getBigramEndsWithThis(idxW3) / (double) bigramMap.size();
+//    }
+//    // P_kn(w2 w3)
+//    private double knScoreBigram(int idxW2, int idxW3) {
+//        //encode bigram (as a continuation) for numerator
+//        long bigramBitPacking = Assignment1Utility.bitPackingBigram(idxW2, idxW3);
+//        double numerator = SloppyMath.max(bigramMap.gettrigramEndsWithThis(bigramBitPacking) - D, 0);
+//
+//        // count numerator to back-off in edge case
+//        int countInBetweenW2 = unigramMap.getBigramWithThisInBetween(idxW2);
+//        if (countInBetweenW2 == 0)
+//            return knScoreUnigram(idxW3);
+//
+//        return numerator / (double) countInBetweenW2;
+//    }
+//    // P_kn(w1 w2 w3)
+//    private double knScoreTrigram(int idxW1, int idxW2, int idxW3) {
+//        //encode bigram as a context (w1w2)
+//        long bigramBitPacking = Assignment1Utility.bitPackingBigram(idxW1, idxW2);
+//
+//        // edge case -> back off
+//        int countW1W2 = bigramMap.getValue(bigramBitPacking);
+//        if (countW1W2 == 0)
+//            return knScoreBigram(idxW2, idxW3);
+//
+//        //encode trigram
+//        long trigramBitPacking = Assignment1Utility.bitPackingTrigram(idxW1, idxW2, idxW3);
+//        double numerator = SloppyMath.max(trigramMap.get(trigramBitPacking) - D, 0);
+//
+//        return numerator / (double) countW1W2;
+//    }
+//
+
+
+
+
+
 
 
 }

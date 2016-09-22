@@ -22,8 +22,16 @@ public class EmpiricalUnigramTest {
         EmpiricalUnigramLanguageModel languageModel = new EmpiricalUnigramLanguageModel(sentences);
 
         // test
-        int[] ngram = new int[] {0, 1, 2, 3, 4, 5, 6, 7, 0, 2, 3, 5, 7, 1, 3, 1};
-        System.out.println(languageModel.getNgramLogProbability(ngram, 0, 1));
+        int[] ngramArray = new int[] {0, 1, 2, 3, 4, 5, 6, 7, 0, 2, 3, 5, 7, 1, 3, 1};
+//        System.out.println(languageModel.getNgramLogProbability(new int[] {0, 1}, 0, 1));
+//        System.out.println(languageModel.getNgramLogProbability(new int[] {0, 1}, 1, 2));
+//        System.out.println(languageModel.getNgramLogProbability(new int[] {0, 1}, 2, 3));
+//        System.out.println(languageModel.getNgramLogProbability(new int[] {0, 1}, 3, 4));
+//        System.out.println(languageModel.getNgramLogProbability(new int[] {0, 1}, 4, 5));
+//        System.out.println(languageModel.getNgramLogProbability(new int[] {0, 1}, 5, 6));
+//        System.out.println(languageModel.getNgramLogProbability(new int[] {0, 1}, 6, 7));
+
+
 
     }
 }

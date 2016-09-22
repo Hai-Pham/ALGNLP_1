@@ -22,6 +22,7 @@ public class UnigramOpenHashMap {
     private int size = 0;
     private int sizeInTheory = 0;
     private int actualSize = 0;
+    private int totalBigramEndsWithThis; // TODO: this one is correctly retrieved if using increment() only
 
     private final int EMPTY_KEY = -1;
 
@@ -289,8 +290,10 @@ public class UnigramOpenHashMap {
         // key is new
         if (currKey == EMPTY_KEY) {
             putEnd(k, e);
-        } else
+        } else {
             bigramEndsWithThis[pos]++;
+            totalBigramEndsWithThis++;
+        }
     }
     public void incrementStart(int k, int s) {
         int pos = find(k);
@@ -300,6 +303,7 @@ public class UnigramOpenHashMap {
             putEnd(k, s);
         } else
             bigramStartsWithThis[pos]++;
+
     }
     public void incrementBetween(int k, int b) {
         int pos = find(k);
@@ -399,6 +403,9 @@ public class UnigramOpenHashMap {
         return keys.length;
     }
 
+    public int getTotalBigramEndsWithThis() {
+        return totalBigramEndsWithThis;
+    }
 //    /**
 //     * Optimization method to free up unused entries in this map
 //     *
