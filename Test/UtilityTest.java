@@ -138,6 +138,23 @@ public class UtilityTest {
 //        }
 //    }
 
+    @Test
+    public void testLongShortOpenHashMap() {
+        Random rand = new Random();
+        LongShortOpenHashMap testMap = new LongShortOpenHashMap(20);
+        for (int i=0; i<10000; i++) {
+            testMap.put(rand.nextLong(), (short)i);
+        }
+        System.out.println("size of test Map is " + testMap.size() + " with actual size is " + testMap.actualSize());
+
+        Iterable<LongShortOpenHashMap.Entry> entrySet = testMap.entrySet();
+        System.out.println("Map content: ");
+        for (LongShortOpenHashMap.Entry entryKV: entrySet) {
+            System.out.println(entryKV.getKey() + ":" + entryKV.getValue());
+        }
+    }
+
+
 //    @Test
 //    public void testUnigramOpenHashMap() {
 //        Random rand = new Random();

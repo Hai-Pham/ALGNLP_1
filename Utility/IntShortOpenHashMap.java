@@ -5,22 +5,23 @@ import edu.berkeley.nlp.util.CollectionUtils;
 import java.util.Arrays;
 import java.util.Iterator;
 
+/** Open Addressing HashMap from Shorts -> Integers
+ *
+ */
+public class IntShortOpenHashMap {
 
-public class LongIntOpenHashMap {
+    private int[] keys;
 
-    private long[] keys;
-
-    private int[] values;
+    private short[] values;
 
     private int size = 0;
     private int sizeInTheory = 0;
-    private int actualSize = 0;
 
-    private final long EMPTY_KEY = -1;
+    private final int EMPTY_KEY = -1;
 
     private final double MAX_LOAD_FACTOR;
 
-    public boolean put(long k, int v) {
+    public boolean put(int k, short v) {
         if (size / (double) keys.length > MAX_LOAD_FACTOR) {
             rehash();
         }
@@ -28,60 +29,61 @@ public class LongIntOpenHashMap {
 
     }
 
-    public LongIntOpenHashMap() {
+    public IntShortOpenHashMap() {
         this(10);
     }
 
-    public LongIntOpenHashMap(int initialCapacity_) {
+    public IntShortOpenHashMap(int initialCapacity_) {
         this(initialCapacity_, 0.7);
     }
 
-    public LongIntOpenHashMap(int initialCapacity_, double loadFactor) {
+    public IntShortOpenHashMap(int initialCapacity_, double loadFactor) {
         int cap = Math.max(5, (int) (initialCapacity_ / loadFactor));
         MAX_LOAD_FACTOR = loadFactor;
-        values = new int[cap];
-        Arrays.fill(values, 0);
-        keys = new long[cap];
+        values = new short[cap];
+        Arrays.fill(values, (short) -1);
+        keys = new int[cap];
         Arrays.fill(keys, -1); // added to avoid collision with k = 0
         sizeInTheory = initialCapacity_;
     }
 
-
     private void rehash() {
-        long[] newKeys = new long[keys.length * 3 / 2];
-        int[] newValues = new int[values.length * 3 / 2];
-        Arrays.fill(newValues, 0);
+        int[] newKeys = new int[keys.length * 3 / 2];
+        short[] newValues = new short[values.length * 3 / 2];
+        Arrays.fill(newValues, (short)-1);
         Arrays.fill(newKeys, -1);
         size = 0;
         for (int i = 0; i < keys.length; ++i) {
-            long curr = keys[i];
+            int curr = keys[i];
             if (curr != EMPTY_KEY) {
-                int val = values[i];
+                short val = values[i];
                 putHelp(curr, val, newKeys, newValues);
             }
         }
         keys = newKeys;
         values = newValues;
     }
+
     public void rehash(double expandedRatio) {
-        long[] newKeys = new long[(int)(keys.length * expandedRatio)];
-        int[] newValues = new int[(int)(values.length * expandedRatio)];
-        Arrays.fill(newValues, -1);
+        int[] newKeys = new int[ (int)(keys.length * expandedRatio)];
+        short[] newValues = new short[(int) (values.length * expandedRatio)];
+        Arrays.fill(newValues, (short)0);
         Arrays.fill(newKeys, -1);
         size = 0;
         for (int i = 0; i < keys.length; ++i) {
-            long curr = keys[i];
+            int curr = keys[i];
             if (curr != EMPTY_KEY) {
-                int val = values[i];
+                short val = values[i];
                 putHelp(curr, val, newKeys, newValues);
             }
         }
         keys = newKeys;
         values = newValues;
     }
-    private boolean putHelp(long k, int v, long[] keyArray, int[] valueArray) {
+
+    private boolean putHelp(int k, short v, int[] keyArray, short[] valueArray) {
         int pos = getInitialPos(k, keyArray);
-        long curr = keyArray[pos];
+        int curr = keyArray[pos];
         while (curr != EMPTY_KEY && curr != k) {
             pos++;
             if (pos == keyArray.length) pos = 0;
@@ -97,9 +99,9 @@ public class LongIntOpenHashMap {
         return false;
     }
 
-    private int getInitialPos(long k, long[] keyArray) {
+    private int getInitialPos(int k, int[] keyArray) {
         int hash = getHashCode(k);
-        int pos = (int) (hash % keyArray.length);
+        int pos = hash % keyArray.length;
         if (pos < 0) pos += keyArray.length;
         // N.B. Doing it this old way causes Integer.MIN_VALUE to be
         // handled incorrect since -Integer.MIN_VALUE is still
@@ -109,20 +111,19 @@ public class LongIntOpenHashMap {
         return pos;
     }
     // helper for hash code
-    private int getHashCode(long n) {
-        return (int)((131111L*n)^n^(1973*n)%sizeInTheory);
-//        int hash = ((int) (n ^ (n >>> 32)) * 3875239);
-//        return hash%sizeInTheory;
+    private int getHashCode(int n) {
+        return (int) ((131111L*n)^n^(1973*n)%sizeInTheory);
     }
 
-    public int get(long k) {
+    public short get(int k) {
         int pos = find(k);
+
         return values[pos];
     }
 
-    private int find(long k) {
+    private int find(int k) {
         int pos = getInitialPos(k, keys);
-        long curr = keys[pos];
+        int curr = keys[pos];
         while (curr != EMPTY_KEY && curr != k) {
             pos++;
             if (pos == keys.length) pos = 0;
@@ -131,9 +132,9 @@ public class LongIntOpenHashMap {
         return pos;
     }
 
-    public void increment(long k, int c) {
+    public void increment(int k, short c) {
         int pos = find(k);
-        long currKey = keys[pos];
+        int currKey = keys[pos];
         if (currKey == EMPTY_KEY) {
             put(k, c);
         } else
@@ -142,29 +143,35 @@ public class LongIntOpenHashMap {
 
     public static class Entry
     {
-        public Entry(long key, int value) {
+        /**
+         * @param key
+         * @param value
+         */
+        public Entry(int key, short value) {
             super();
             this.key = key;
             this.value = value;
         }
 
-        public long key;
+        public int key;
 
-        public int value;
+        public short value;
 
-        public long getKey() {
+        public int getKey() {
             return key;
         }
 
-        public int getValue() {
+        public short getValue() {
             return value;
         }
     }
 
-    private class EntryIterator extends MapIterator<LongIntOpenHashMap.Entry> {
-        public LongIntOpenHashMap.Entry next() {
+    private class EntryIterator extends MapIterator<Entry>
+    {
+        public Entry next() {
             final int nextIndex = nextIndex();
-            return new LongIntOpenHashMap.Entry(keys[nextIndex], values[nextIndex]);
+
+            return new Entry(keys[nextIndex], values[nextIndex]);
         }
     }
 
@@ -195,8 +202,8 @@ public class LongIntOpenHashMap {
         private int next, end;
     }
 
-    public Iterable<LongIntOpenHashMap.Entry> entrySet() {
-        return CollectionUtils.iterable(new LongIntOpenHashMap.EntryIterator());
+    public Iterable<Entry> entrySet() {
+        return CollectionUtils.iterable(new EntryIterator());
     }
 
     public int size() {
@@ -208,27 +215,12 @@ public class LongIntOpenHashMap {
     }
 
     /**
-     * Optimization method to free up unused entries in this map
+     * Automatic Optimization method to free up unused entries in this map
      *
      */
-    public void optimizeStorage(double expandedRatio){
-        System.out.println("This map has the utilization of " + 100 * size / (float) keys.length + "%. Now optimizing...");
-
-        long[] newKeys = new long[size];
-        int[] newValues = new int[size];
-        int j = 0;
-
-        for (int i=0; i<values.length; i++) {
-            if (values[i] != 0) {
-                newKeys[j] = keys[i];
-                newValues[j] = values[i];
-                j++;
-            }
-        }
-        // free up
-        keys = newKeys;
-        values = newValues;
-
-        rehash(expandedRatio);
+    public void autoOptimizeStorage(){
+        double utilization = size / (double) actualSize();
+        rehash(utilization + 0.15);
     }
 }
+

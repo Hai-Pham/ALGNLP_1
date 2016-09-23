@@ -10,7 +10,7 @@ import java.util.*;
 /**
  * Created by Gorilla on 9/15/2016.
  */
-public class SmallTest {
+public class KNLanguageModelTest {
 /*    @Test
     public void NaiveTrigramLanguageModelLogProbabilityWith_ADD_ONE_SMOOTHING_Test() {
         System.out.println("Test the log probability of Naive Trigram Language Model");
@@ -400,9 +400,9 @@ public class SmallTest {
                     EnglishWordIndexer.getIndexer().get(idxUnigram) + ":" + entryKV.getValue() +
                     "==" + entryKV.getEnd() + ":" + entryKV.getStart());
         }
-        Iterable<LongIntOpenHashMap.Entry> trigramEntrySet = languageModel.trigramMap.entrySet();
+        Iterable<TrigramOpenHashMap.Entry> trigramEntrySet = languageModel.trigramMap.entrySet();
         System.out.println("Trigram Map: ");
-        for (LongIntOpenHashMap.Entry entryKV: trigramEntrySet) {
+        for (TrigramOpenHashMap.Entry entryKV: trigramEntrySet) {
             // Decode
             int[] trigram = Assignment1Utility.trigramBitPackingDecode(entryKV.getKey());
             int idxTrigram = trigram[0];

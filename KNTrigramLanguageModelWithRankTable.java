@@ -1,25 +1,21 @@
 package edu.berkeley.nlp.assignments.assign1.student;
 
-/**
- * Created by Gorilla on 9/19/2016.
- */
-
-import edu.berkeley.nlp.assignments.assign1.student.Utility.*;
+import edu.berkeley.nlp.assignments.assign1.student.Utility.Assignment1Utility;
+import edu.berkeley.nlp.assignments.assign1.student.Utility.BigramOpenHashMap;
+import edu.berkeley.nlp.assignments.assign1.student.Utility.LongIntOpenHashMap;
+import edu.berkeley.nlp.assignments.assign1.student.Utility.UnigramOpenHashMap;
 import edu.berkeley.nlp.langmodel.EnglishWordIndexer;
 import edu.berkeley.nlp.langmodel.NgramLanguageModel;
 import edu.berkeley.nlp.math.SloppyMath;
-import edu.berkeley.nlp.util.StringIndexer;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Naive Implementation of Trigram with KN Smoothing
- *
- * For 3 ngrams, there are 3 hashmaps<int, int>. The mapping from word(string) -> int is provided by StringIndexer util
- * Note: this one use the TIntOpenHashMap but not having ranking table
+ * Created by Gorilla on 9/22/2016.
  */
-public class KNTrigramLanguageModel implements NgramLanguageModel {
+
+public class KNTrigramLanguageModelWithRankTable implements NgramLanguageModel {
 
     static final String STOP = NgramLanguageModel.STOP;
     static final String START = NgramLanguageModel.START;
@@ -38,7 +34,9 @@ public class KNTrigramLanguageModel implements NgramLanguageModel {
     // Counters - made public for small test
     public UnigramOpenHashMap unigramMap = new UnigramOpenHashMap(50000);
     public BigramOpenHashMap bigramMap = new BigramOpenHashMap(100000);
-    public TrigramOpenHashMap trigramMap = new TrigramOpenHashMap(1000000);
+    public LongIntOpenHashMap trigramMap = new LongIntOpenHashMap(1000000);
+
+
 
     /**
      * Constructor
@@ -47,7 +45,7 @@ public class KNTrigramLanguageModel implements NgramLanguageModel {
      * if we have "w1 w2 w3" then w1 = trigramWord, w2 = bigramWord, w3 = word
      * @param sentenceCollection: list of sentences (which is a list of strings)
      */
-    public KNTrigramLanguageModel(Iterable<List<String>> sentenceCollection) {
+    public KNTrigramLanguageModelWithRankTable(Iterable<List<String>> sentenceCollection) {
 
         System.out.println("Building Knesser Ney Trigram Language Model . . .");
         int sent = 0;
@@ -189,12 +187,6 @@ public class KNTrigramLanguageModel implements NgramLanguageModel {
         unigramMap.rehash(0.7);
         bigramMap.rehash(0.8);
         trigramMap.rehash(0.75);
-
-        //free up indexer
-        StringIndexer indexer = EnglishWordIndexer.getIndexer();
-        indexer = null;
-        System.gc();
-
         System.out.println("Optimization complete!");
     }
     private void consolidateStats(){

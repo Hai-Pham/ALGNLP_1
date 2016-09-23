@@ -6,7 +6,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 
 
-public class LongIntOpenHashMap {
+public class TrigramOpenHashMap {
 
     private long[] keys;
 
@@ -28,15 +28,15 @@ public class LongIntOpenHashMap {
 
     }
 
-    public LongIntOpenHashMap() {
+    public TrigramOpenHashMap() {
         this(10);
     }
 
-    public LongIntOpenHashMap(int initialCapacity_) {
+    public TrigramOpenHashMap(int initialCapacity_) {
         this(initialCapacity_, 0.7);
     }
 
-    public LongIntOpenHashMap(int initialCapacity_, double loadFactor) {
+    public TrigramOpenHashMap(int initialCapacity_, double loadFactor) {
         int cap = Math.max(5, (int) (initialCapacity_ / loadFactor));
         MAX_LOAD_FACTOR = loadFactor;
         values = new int[cap];
@@ -161,10 +161,10 @@ public class LongIntOpenHashMap {
         }
     }
 
-    private class EntryIterator extends MapIterator<LongIntOpenHashMap.Entry> {
-        public LongIntOpenHashMap.Entry next() {
+    private class EntryIterator extends MapIterator<TrigramOpenHashMap.Entry> {
+        public TrigramOpenHashMap.Entry next() {
             final int nextIndex = nextIndex();
-            return new LongIntOpenHashMap.Entry(keys[nextIndex], values[nextIndex]);
+            return new TrigramOpenHashMap.Entry(keys[nextIndex], values[nextIndex]);
         }
     }
 
@@ -195,8 +195,8 @@ public class LongIntOpenHashMap {
         private int next, end;
     }
 
-    public Iterable<LongIntOpenHashMap.Entry> entrySet() {
-        return CollectionUtils.iterable(new LongIntOpenHashMap.EntryIterator());
+    public Iterable<TrigramOpenHashMap.Entry> entrySet() {
+        return CollectionUtils.iterable(new TrigramOpenHashMap.EntryIterator());
     }
 
     public int size() {
