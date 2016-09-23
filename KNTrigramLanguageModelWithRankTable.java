@@ -76,7 +76,7 @@ public class KNTrigramLanguageModelWithRankTable implements NgramLanguageModel {
         // consolidating vocabulary for each n-gram
         consolidateStats();
         debugToConsole();
-//        optimizeStorage();
+        optimizeStorage();
         // compare with ones after optimizing
         rebuildNgramMapsWithRanks();
         consolidateStatsAfterCleaning();
@@ -85,7 +85,6 @@ public class KNTrigramLanguageModelWithRankTable implements NgramLanguageModel {
     // BEGIN - helper methods for constructor
     private void rebuildNgramMapsWithRanks(){
         rebuildUnigramMapWithRanks();
-
         rebuildTrigramMapWithRanks();
         rebuildBigramMapWithRanks();
         cleanUpAfterRebuildingHashMaps();
@@ -177,6 +176,7 @@ public class KNTrigramLanguageModelWithRankTable implements NgramLanguageModel {
         unigramMap.autoOptimizeStorage();
         bigramMap.autoOptimizeStorage();
         trigramMap.autoOptimizeStorage();
+        System.out.println("Optimizing complete!");
     }
     private void optimizeStorageAfterClearning() {
         System.out.println("Now optmizing new hashmaps ...");
