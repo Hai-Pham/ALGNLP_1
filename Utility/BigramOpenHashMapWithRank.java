@@ -12,65 +12,64 @@ import java.util.Iterator;
  * w1w2 => c(w1w2) : c(.w1w2): c(w1w2.)
  * Created by Gorilla on 9/19/2016.
  */
-public class BigramOpenHashMap {
+public class BigramOpenHashMapWithRank {
     private long[] keys;
 
-    private int[] values;
-    private int[] trigramEndsWithThis;
-    private int[] trigramStartsWithThis;
+    private short[] values;
+    private short[] trigramEndsWithThis;
+    private short[] trigramStartsWithThis;
 
     private int size = 0;
     private int sizeInTheory = 0;
-    private int actualSize = 0;
 
     private final int EMPTY_KEY = -1;
 
     private final double MAX_LOAD_FACTOR;
 
     // order: value -> end -> start -> between
-    public boolean put(long k, int v, int end, int start) {
+    public boolean putRanks(long k, short v, short end, short start) {
         if (size / (double) keys.length > MAX_LOAD_FACTOR) {
             rehash();
         }
         return putHelp(k, v, end, start, keys, values, trigramEndsWithThis, trigramStartsWithThis);
     }
-    public boolean putValue(long k, int v) {
+    public boolean putValueRank(long k, short v) {
         if (size / (double) keys.length > MAX_LOAD_FACTOR) {
             rehash();
         }
         return putHelpValue(k, v, keys, values);
     }
-    public boolean putEnd(long k, int e) {
+    public boolean putEndRank(long k, short e) {
         if (size / (double) keys.length > MAX_LOAD_FACTOR) {
             rehash();
         }
         return putHelpEnd(k, e, keys, trigramEndsWithThis);
     }
-    public boolean putStart(long k, int s) {
+    public boolean putStartRank(long k, short s) {
         if (size / (double) keys.length > MAX_LOAD_FACTOR) {
             rehash();
         }
         return putHelpStart(k, s, keys, trigramStartsWithThis);
     }
 
-    public BigramOpenHashMap() {
+    public BigramOpenHashMapWithRank() {
         this(10);
     }
 
-    public BigramOpenHashMap(int initialCapacity_) {
+    public BigramOpenHashMapWithRank(int initialCapacity_) {
         this(initialCapacity_, 0.7);
     }
 
-    public BigramOpenHashMap(int initialCapacity_, double loadFactor) {
+    public BigramOpenHashMapWithRank(int initialCapacity_, double loadFactor) {
         int cap = Math.max(5, (int) (initialCapacity_ / loadFactor));
         MAX_LOAD_FACTOR = loadFactor;
 
-        values = new int[cap];
-        trigramEndsWithThis = new int[cap];
-        trigramStartsWithThis = new int[cap];
-        Arrays.fill(values, 0);
-        Arrays.fill(trigramEndsWithThis, 0);
-        Arrays.fill(trigramStartsWithThis, 0);
+        values = new short[cap];
+        trigramEndsWithThis = new short[cap];
+        trigramStartsWithThis = new short[cap];
+        Arrays.fill(values, (short)0);
+        Arrays.fill(trigramEndsWithThis, (short)0);
+        Arrays.fill(trigramStartsWithThis, (short)0);
 
         keys = new long[cap];
         Arrays.fill(keys, -1); // added to avoid collision with k = 0
@@ -80,21 +79,21 @@ public class BigramOpenHashMap {
 
     private void rehash() {
         long[] newKeys = new long[keys.length * 3 / 2];
-        int[] newValues = new int[values.length * 3 / 2];
-        int[] newtrigramEndsWithThis = new int[values.length * 3 / 2];
-        int[] newtrigramStartsWithThis = new int[values.length * 3 / 2];
+        short[] newValues = new short[values.length * 3 / 2];
+        short[] newtrigramEndsWithThis = new short[values.length * 3 / 2];
+        short[] newtrigramStartsWithThis = new short[values.length * 3 / 2];
 
-        Arrays.fill(newValues, 0);
-        Arrays.fill(newtrigramEndsWithThis, 0);
-        Arrays.fill(newtrigramStartsWithThis, 0);
+        Arrays.fill(newValues, (short)0);
+        Arrays.fill(newtrigramEndsWithThis, (short)0);
+        Arrays.fill(newtrigramStartsWithThis, (short)0);
         Arrays.fill(newKeys, -1);
         size = 0;
         for (int i = 0; i < keys.length; ++i) {
             long curr = keys[i];
             if (curr != EMPTY_KEY) {
-                int val = values[i];
-                int end = trigramEndsWithThis[i];
-                int start = trigramStartsWithThis[i];
+                short val = values[i];
+                short end = trigramEndsWithThis[i];
+                short start = trigramStartsWithThis[i];
                 // TODO: fix this
                 putHelp(curr, val, end, start, newKeys, newValues, newtrigramEndsWithThis, newtrigramStartsWithThis);
             }
@@ -108,21 +107,21 @@ public class BigramOpenHashMap {
 
     public void rehash(double expandedRatio) {
         long[] newKeys = new long[(int)(keys.length * expandedRatio)];
-        int[] newValues = new int[(int)(values.length * expandedRatio)];
-        int[] newtrigramEndsWithThis = new int[(int)(values.length * expandedRatio)];
-        int[] newtrigramStartsWithThis = new int[(int)(values.length * expandedRatio)];
+        short[] newValues = new short[(int)(values.length * expandedRatio)];
+        short[] newtrigramEndsWithThis = new short[(int)(values.length * expandedRatio)];
+        short[] newtrigramStartsWithThis = new short[(int)(values.length * expandedRatio)];
 
-        Arrays.fill(newValues, 0);
-        Arrays.fill(newtrigramEndsWithThis, 0);
-        Arrays.fill(newtrigramStartsWithThis, 0);
+        Arrays.fill(newValues, (short)0);
+        Arrays.fill(newtrigramEndsWithThis, (short)0);
+        Arrays.fill(newtrigramStartsWithThis, (short)0);
         Arrays.fill(newKeys, -1);
         size = 0;
         for (int i = 0; i < keys.length; ++i) {
             long curr = keys[i];
             if (curr != EMPTY_KEY) {
-                int val = values[i];
-                int end = trigramEndsWithThis[i];
-                int start = trigramStartsWithThis[i];
+                short val = values[i];
+                short end = trigramEndsWithThis[i];
+                short start = trigramStartsWithThis[i];
                 // TODO: fix this
                 putHelp(curr, val, end, start, newKeys, newValues, newtrigramEndsWithThis, newtrigramStartsWithThis);
             }
@@ -135,8 +134,8 @@ public class BigramOpenHashMap {
     }
 
     // order: value -> end -> start -> between
-    private boolean putHelp(long k, int v, int end, int start,
-                            long[] keyArray, int[] valueArray, int[] ends, int[] starts) {
+    private boolean putHelp(long k, short v, short end, short start,
+                            long[] keyArray, short[] valueArray, short[] ends, short[] starts) {
         int pos = getInitialPos(k, keyArray);
         long curr = keyArray[pos];
         // find proper key first
@@ -158,7 +157,7 @@ public class BigramOpenHashMap {
         }
         return false;
     }
-    private boolean putHelpValue(long k, int v, long[] keyArray, int[] valueArray) {
+    private boolean putHelpValue(long k, short v, long[] keyArray, short[] valueArray) {
         int pos = getInitialPos(k, keyArray);
         long curr = keyArray[pos];
         // find proper key first
@@ -177,7 +176,7 @@ public class BigramOpenHashMap {
         }
         return false;
     }
-    private boolean putHelpEnd(long k, int e, long[] keyArray, int[] endArray) {
+    private boolean putHelpEnd(long k, short e, long[] keyArray, short[] endArray) {
         int pos = getInitialPos(k, keyArray);
         long curr = keyArray[pos];
         // find proper key first
@@ -196,7 +195,7 @@ public class BigramOpenHashMap {
         }
         return false;
     }
-    private boolean putHelpStart(long k, int s, long[] keyArray, int[] startArray) {
+    private boolean putHelpStart(long k, short s, long[] keyArray, short[] startArray) {
         int pos = getInitialPos(k, keyArray);
         long curr = keyArray[pos];
         // find proper key first
@@ -234,18 +233,29 @@ public class BigramOpenHashMap {
 //        return hash%sizeInTheory;
     }
 
-    // 4 getters
-    public int getValue(long k) {
+    // 5 getters
+    public short[] getAllRanks(int k) {
+        int pos = find(k);
+
+        short[] results = new short[3];
+        results[0] = values[pos];
+        results[1] = trigramEndsWithThis[pos];
+        results[2] = trigramStartsWithThis[pos];
+
+        return results;
+    }
+
+    public short getValueRank(long k) {
         int pos = find(k);
 
         return values[pos];
     }
-    public int gettrigramEndsWithThis(long k) {
+    public short gettrigramEndsWithThisRank(long k) {
         int pos = find(k);
 
         return trigramEndsWithThis[pos];
     }
-    public int gettrigramStartsWithThis(long k) {
+    public short gettrigramStartsWithThisRank(long k) {
         int pos = find(k);
 
         return trigramStartsWithThis[pos];
@@ -262,30 +272,30 @@ public class BigramOpenHashMap {
         return pos;
     }
 
-    public void incrementValue(long k, int v) {
+    public void incrementValue(long k, short v) {
         int pos = find(k);
         long currKey = keys[pos];
         // key is new
         if (currKey == EMPTY_KEY) {
-            putValue(k, v);
+            putValueRank(k, v);
         } else
             values[pos]++;
     }
-    public void incrementEnd(long k, int e) {
+    public void incrementEnd(long k, short e) {
         int pos = find(k);
         long currKey = keys[pos];
         // key is new
         if (currKey == EMPTY_KEY) {
-            putEnd(k, e);
+            putEndRank(k, e);
         } else
             trigramEndsWithThis[pos]++;
     }
-    public void incrementStart(long k, int s) {
+    public void incrementStart(long k, short s) {
         int pos = find(k);
         long currKey = keys[pos];
         // key is new
         if (currKey == EMPTY_KEY) {
-            putEnd(k, s);
+            putEndRank(k, s);
         } else
             trigramStartsWithThis[pos]++;
     }
@@ -296,7 +306,7 @@ public class BigramOpenHashMap {
          * @param key
          * @param value
          */
-        public Entry(long key, int value, int end, int start) {
+        public Entry(long key, short value, short end, short start) {
             super();
             this.key = key;
             this.value = value;
@@ -305,33 +315,30 @@ public class BigramOpenHashMap {
         }
 
         public long key;
-        public int value;
-        public int end;
-        public int start;
+        public short value;
+        public short end;
+        public short start;
 
         public long getKey() {
             return key;
         }
-        public int getValue() {
+        public short getValue() {
             return value;
         }
-        public int getEnd() {
+        public short getEnd() {
             return end;
         }
-        public int getStart() {
+        public short getStart() {
             return start;
-        }
-        public int[] getAllValues() {
-            return new int[]{value, end, start};
         }
     }
 
-    private class EntryIterator extends BigramOpenHashMap.MapIterator<BigramOpenHashMap.Entry>
+    private class EntryIterator extends BigramOpenHashMapWithRank.MapIterator<BigramOpenHashMapWithRank.Entry>
     {
-        public BigramOpenHashMap.Entry next() {
+        public BigramOpenHashMapWithRank.Entry next() {
             final int nextIndex = nextIndex();
             //access arrays of values from mother class
-            return new BigramOpenHashMap.Entry(keys[nextIndex], values[nextIndex],
+            return new BigramOpenHashMapWithRank.Entry(keys[nextIndex], values[nextIndex],
                     trigramEndsWithThis[nextIndex], trigramStartsWithThis[nextIndex]);
         }
     }
@@ -363,8 +370,8 @@ public class BigramOpenHashMap {
         private int next, end;
     }
 
-    public Iterable<BigramOpenHashMap.Entry> entrySet() {
-        return CollectionUtils.iterable(new BigramOpenHashMap.EntryIterator());
+    public Iterable<BigramOpenHashMapWithRank.Entry> entrySet() {
+        return CollectionUtils.iterable(new BigramOpenHashMapWithRank.EntryIterator());
     }
 
     public int size() {
@@ -382,7 +389,7 @@ public class BigramOpenHashMap {
         System.out.println("This map has the utilization of " + 100 * size() / (double) actualSize() + "%. Now optimizing...");
 
         long[] newKeys = new long[size];
-        int[] newValues = new int[size];
+        short[] newValues = new short[size];
         int j = 0;
 
         for (int i=0; i<values.length; i++) {

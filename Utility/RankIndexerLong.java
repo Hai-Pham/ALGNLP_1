@@ -55,7 +55,7 @@ public class RankIndexerLong implements Serializable
      * @param e
      * @return
      */
-    public int addAndGetIndex(long e) {
+    public short addAndGetIndex(long e) {
         short index = indexes.get(e);
         if (index >= 0) {
             return index;

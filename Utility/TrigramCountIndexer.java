@@ -6,8 +6,8 @@ package edu.berkeley.nlp.assignments.assign1.student.Utility;
  */
 public class TrigramCountIndexer {
     /**
-     * Class responsible for maintaining a global mapping between English words and
-     * unique integers.
+     * Class responsible for maintaining a global mapping between values (count of ngrams) and
+     * unique shorts.
      *
      * @author adampauls
      *

@@ -6,21 +6,20 @@ import java.util.Arrays;
 import java.util.Iterator;
 
 
-public class TrigramOpenHashMap {
+public class TrigramOpenHashMapWithRank {
 
     private long[] keys;
 
-    private int[] values;
+    private short[] values;
 
     private int size = 0;
     private int sizeInTheory = 0;
-    private int actualSize = 0;
 
     private final long EMPTY_KEY = -1;
 
     private final double MAX_LOAD_FACTOR;
 
-    public boolean put(long k, int v) {
+    public boolean putRank(long k, short v) {
         if (size / (double) keys.length > MAX_LOAD_FACTOR) {
             rehash();
         }
@@ -28,19 +27,19 @@ public class TrigramOpenHashMap {
 
     }
 
-    public TrigramOpenHashMap() {
+    public TrigramOpenHashMapWithRank() {
         this(10);
     }
 
-    public TrigramOpenHashMap(int initialCapacity_) {
+    public TrigramOpenHashMapWithRank(int initialCapacity_) {
         this(initialCapacity_, 0.7);
     }
 
-    public TrigramOpenHashMap(int initialCapacity_, double loadFactor) {
+    public TrigramOpenHashMapWithRank(int initialCapacity_, double loadFactor) {
         int cap = Math.max(5, (int) (initialCapacity_ / loadFactor));
         MAX_LOAD_FACTOR = loadFactor;
-        values = new int[cap];
-        Arrays.fill(values, 0);
+        values = new short[cap];
+        Arrays.fill(values, (short)0);
         keys = new long[cap];
         Arrays.fill(keys, -1); // added to avoid collision with k = 0
         sizeInTheory = initialCapacity_;
@@ -49,14 +48,14 @@ public class TrigramOpenHashMap {
 
     private void rehash() {
         long[] newKeys = new long[keys.length * 3 / 2];
-        int[] newValues = new int[values.length * 3 / 2];
-        Arrays.fill(newValues, 0);
+        short[] newValues = new short[values.length * 3 / 2];
+        Arrays.fill(newValues, (short)0);
         Arrays.fill(newKeys, -1);
         size = 0;
         for (int i = 0; i < keys.length; ++i) {
             long curr = keys[i];
             if (curr != EMPTY_KEY) {
-                int val = values[i];
+                short val = values[i];
                 putHelp(curr, val, newKeys, newValues);
             }
         }
@@ -65,21 +64,21 @@ public class TrigramOpenHashMap {
     }
     public void rehash(double expandedRatio) {
         long[] newKeys = new long[(int)(keys.length * expandedRatio)];
-        int[] newValues = new int[(int)(values.length * expandedRatio)];
-        Arrays.fill(newValues, 0);
+        short[] newValues = new short[(int)(values.length * expandedRatio)];
+        Arrays.fill(newValues, (short)0);
         Arrays.fill(newKeys, -1);
         size = 0;
         for (int i = 0; i < keys.length; ++i) {
             long curr = keys[i];
             if (curr != EMPTY_KEY) {
-                int val = values[i];
+                short val = values[i];
                 putHelp(curr, val, newKeys, newValues);
             }
         }
         keys = newKeys;
         values = newValues;
     }
-    private boolean putHelp(long k, int v, long[] keyArray, int[] valueArray) {
+    private boolean putHelp(long k, short v, long[] keyArray, short[] valueArray) {
         int pos = getInitialPos(k, keyArray);
         long curr = keyArray[pos];
         while (curr != EMPTY_KEY && curr != k) {
@@ -115,7 +114,7 @@ public class TrigramOpenHashMap {
 //        return hash%sizeInTheory;
     }
 
-    public int get(long k) {
+    public short getValueRank(long k) {
         int pos = find(k);
         return values[pos];
     }
@@ -131,18 +130,18 @@ public class TrigramOpenHashMap {
         return pos;
     }
 
-    public void increment(long k, int c) {
+    public void increment(long k, short c) {
         int pos = find(k);
         long currKey = keys[pos];
         if (currKey == EMPTY_KEY) {
-            put(k, c);
+            putRank(k, c);
         } else
             values[pos]++;
     }
 
     public static class Entry
     {
-        public Entry(long key, int value) {
+        public Entry(long key, short value) {
             super();
             this.key = key;
             this.value = value;
@@ -150,21 +149,21 @@ public class TrigramOpenHashMap {
 
         public long key;
 
-        public int value;
+        public short value;
 
         public long getKey() {
             return key;
         }
 
-        public int getValue() {
+        public short getValue() {
             return value;
         }
     }
 
-    private class EntryIterator extends MapIterator<TrigramOpenHashMap.Entry> {
-        public TrigramOpenHashMap.Entry next() {
+    private class EntryIterator extends MapIterator<TrigramOpenHashMapWithRank.Entry> {
+        public TrigramOpenHashMapWithRank.Entry next() {
             final int nextIndex = nextIndex();
-            return new TrigramOpenHashMap.Entry(keys[nextIndex], values[nextIndex]);
+            return new TrigramOpenHashMapWithRank.Entry(keys[nextIndex], values[nextIndex]);
         }
     }
 
@@ -195,8 +194,8 @@ public class TrigramOpenHashMap {
         private int next, end;
     }
 
-    public Iterable<TrigramOpenHashMap.Entry> entrySet() {
-        return CollectionUtils.iterable(new TrigramOpenHashMap.EntryIterator());
+    public Iterable<TrigramOpenHashMapWithRank.Entry> entrySet() {
+        return CollectionUtils.iterable(new TrigramOpenHashMapWithRank.EntryIterator());
     }
 
     public int size() {
@@ -215,7 +214,7 @@ public class TrigramOpenHashMap {
         System.out.println("This map has the utilization of " + 100 * size / (float) keys.length + "%. Now optimizing...");
 
         long[] newKeys = new long[size];
-        int[] newValues = new int[size];
+        short[] newValues = new short[size];
         int j = 0;
 
         for (int i=0; i<values.length; i++) {

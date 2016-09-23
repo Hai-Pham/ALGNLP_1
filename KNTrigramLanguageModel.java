@@ -191,9 +191,9 @@ public class KNTrigramLanguageModel implements NgramLanguageModel {
         trigramMap.rehash(0.75);
 
         //free up indexer
-        StringIndexer indexer = EnglishWordIndexer.getIndexer();
-        indexer = null;
-        System.gc();
+//        StringIndexer indexer = EnglishWordIndexer.getIndexer();
+//        indexer = null;
+//        System.gc();
 
         System.out.println("Optimization complete!");
     }

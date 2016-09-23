@@ -2,7 +2,6 @@ package edu.berkeley.nlp.assignments.assign1.student.Utility;
 
 import edu.berkeley.nlp.util.CollectionUtils;
 
-import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.Iterator;
 
@@ -11,17 +10,16 @@ import java.util.Iterator;
  * w => c(w) : c(.w): c(w.): c(.w.)
  * Created by Gorilla on 9/19/2016.
  */
-public class UnigramOpenHashMap {
+public class UnigramOpenHashMapWithRank {
     private int[] keys;
 
-    private int[] values;
-    private int[] bigramEndsWithThis;
-    private int[] bigramStartsWithThis;
-    private int[] bigramWithThisInBetween;
+    private short[] values;
+    private short[] bigramEndsWithThis;
+    private short[] bigramStartsWithThis;
+    private short[] bigramWithThisInBetween;
 
     private int size = 0;
     private int sizeInTheory = 0;
-    private int actualSize = 0;
     private int totalBigramEndsWithThis; // TODO: this one is correctly retrieved if using increment() only
 
     private final int EMPTY_KEY = -1;
@@ -29,7 +27,7 @@ public class UnigramOpenHashMap {
     private final double MAX_LOAD_FACTOR;
 
     // order: value -> end -> start -> between
-    public boolean put(int k, int v, int end, int start, int between) {
+    public boolean putRanks(int k, short v, short end, short start, short between) {
         if (size / (double) keys.length > MAX_LOAD_FACTOR) {
             rehash();
         }
@@ -37,51 +35,51 @@ public class UnigramOpenHashMap {
                 bigramStartsWithThis, bigramWithThisInBetween);
     }
 
-    public boolean putValue(int k, int v) {
+    public boolean putValueRank(int k, short v) {
         if (size / (double) keys.length > MAX_LOAD_FACTOR) {
             rehash();
         }
         return putHelpValue(k, v, keys, values);
     }
-    public boolean putEnd(int k, int e) {
+    public boolean putEndRank(int k, short e) {
         if (size / (double) keys.length > MAX_LOAD_FACTOR) {
             rehash();
         }
         return putHelpEnd(k, e, keys, bigramEndsWithThis);
     }
-    public boolean putStart(int k, int s) {
+    public boolean putStartRank(int k, short s) {
         if (size / (double) keys.length > MAX_LOAD_FACTOR) {
             rehash();
         }
         return putHelpStart(k, s, keys, bigramStartsWithThis);
     }
-    public boolean putBetween(int k, int b) {
+    public boolean putBetweenRank(int k, short b) {
         if (size / (double) keys.length > MAX_LOAD_FACTOR) {
             rehash();
         }
         return putHelpBetween(k, b, keys, bigramWithThisInBetween);
     }
 
-    public UnigramOpenHashMap() {
+    public UnigramOpenHashMapWithRank() {
         this(10);
     }
 
-    public UnigramOpenHashMap(int initialCapacity_) {
+    public UnigramOpenHashMapWithRank(int initialCapacity_) {
         this(initialCapacity_, 0.7);
     }
 
-    public UnigramOpenHashMap(int initialCapacity_, double loadFactor) {
+    public UnigramOpenHashMapWithRank(int initialCapacity_, double loadFactor) {
         int cap = Math.max(5, (int) (initialCapacity_ / loadFactor));
         MAX_LOAD_FACTOR = loadFactor;
 
-        values = new int[cap];
-        bigramEndsWithThis = new int[cap];
-        bigramStartsWithThis = new int[cap];
-        bigramWithThisInBetween = new int[cap];
-        Arrays.fill(values, 0);
-        Arrays.fill(bigramEndsWithThis, 0);
-        Arrays.fill(bigramStartsWithThis, 0);
-        Arrays.fill(bigramWithThisInBetween, 0);
+        values = new short[cap];
+        bigramEndsWithThis = new short[cap];
+        bigramStartsWithThis = new short[cap];
+        bigramWithThisInBetween = new short[cap];
+        Arrays.fill(values, (short)0);
+        Arrays.fill(bigramEndsWithThis, (short)0);
+        Arrays.fill(bigramStartsWithThis, (short)0);
+        Arrays.fill(bigramWithThisInBetween, (short)0);
 
         keys = new int[cap];
         Arrays.fill(keys, -1); // added to avoid collision with k = 0
@@ -91,24 +89,24 @@ public class UnigramOpenHashMap {
 
     private void rehash() {
         int[] newKeys = new int[keys.length * 3 / 2];
-        int[] newValues = new int[values.length * 3 / 2];
-        int[] newBigramEndsWithThis = new int[values.length * 3 / 2];
-        int[] newBigramStartsWithThis = new int[values.length * 3 / 2];
-        int[] newBigramWithThisInBetween = new int[values.length * 3 / 2];
+        short[] newValues = new short[values.length * 3 / 2];
+        short[] newBigramEndsWithThis = new short[values.length * 3 / 2];
+        short[] newBigramStartsWithThis = new short[values.length * 3 / 2];
+        short[] newBigramWithThisInBetween = new short[values.length * 3 / 2];
 
-        Arrays.fill(newValues, 0);
-        Arrays.fill(newBigramEndsWithThis, 0);
-        Arrays.fill(newBigramStartsWithThis, 0);
-        Arrays.fill(newBigramWithThisInBetween, 0);
+        Arrays.fill(newValues, (short)0);
+        Arrays.fill(newBigramEndsWithThis, (short)0);
+        Arrays.fill(newBigramStartsWithThis, (short)0);
+        Arrays.fill(newBigramWithThisInBetween, (short)0);
         Arrays.fill(newKeys, -1);
         size = 0;
         for (int i = 0; i < keys.length; ++i) {
             int curr = keys[i];
             if (curr != EMPTY_KEY) {
-                int val = values[i];
-                int end = bigramEndsWithThis[i];
-                int start = bigramStartsWithThis[i];
-                int between = bigramWithThisInBetween[i];
+                short val = values[i];
+                short end = bigramEndsWithThis[i];
+                short start = bigramStartsWithThis[i];
+                short between = bigramWithThisInBetween[i];
                 // TODO: fix this
                 putHelp(curr, val, end, start, between, newKeys, newValues, newBigramEndsWithThis,
                         newBigramStartsWithThis, newBigramWithThisInBetween);
@@ -123,24 +121,24 @@ public class UnigramOpenHashMap {
     }
     public void rehash(double expandedRatio) {
         int[] newKeys = new int[(int) (keys.length * expandedRatio)];
-        int[] newValues = new int[(int) (values.length * expandedRatio)];
-        int[] newBigramEndsWithThis = new int[(int) (values.length * expandedRatio)];
-        int[] newBigramStartsWithThis = new int[(int) (values.length * expandedRatio)];
-        int[] newBigramWithThisInBetween = new int[(int) (values.length * expandedRatio)];
+        short[] newValues = new short[(int) (values.length * expandedRatio)];
+        short[] newBigramEndsWithThis = new short[(int) (values.length * expandedRatio)];
+        short[] newBigramStartsWithThis = new short[(int) (values.length * expandedRatio)];
+        short[] newBigramWithThisInBetween = new short[(int) (values.length * expandedRatio)];
 
-        Arrays.fill(newValues, 0);
-        Arrays.fill(newBigramEndsWithThis, 0);
-        Arrays.fill(newBigramStartsWithThis, 0);
-        Arrays.fill(newBigramWithThisInBetween, 0);
+        Arrays.fill(newValues, (short)0);
+        Arrays.fill(newBigramEndsWithThis, (short)0);
+        Arrays.fill(newBigramStartsWithThis, (short)0);
+        Arrays.fill(newBigramWithThisInBetween, (short)0);
         Arrays.fill(newKeys, -1);
         size = 0;
         for (int i = 0; i < keys.length; ++i) {
             int curr = keys[i];
             if (curr != EMPTY_KEY) {
-                int val = values[i];
-                int end = bigramEndsWithThis[i];
-                int start = bigramStartsWithThis[i];
-                int between = bigramWithThisInBetween[i];
+                short val = values[i];
+                short end = bigramEndsWithThis[i];
+                short start = bigramStartsWithThis[i];
+                short between = bigramWithThisInBetween[i];
                 // TODO: fix this
                 putHelp(curr, val, end, start, between, newKeys, newValues, newBigramEndsWithThis,
                         newBigramStartsWithThis, newBigramWithThisInBetween);
@@ -155,8 +153,8 @@ public class UnigramOpenHashMap {
     }
 
     // order: value -> end -> start -> between
-    private boolean putHelp(int k, int v, int end, int start, int between,
-                            int[] keyArray, int[] valueArray, int[] ends, int[] starts, int[] betweens) {
+    private boolean putHelp(int k, short v, short end, short start, short between,
+                            int[] keyArray, short[] valueArray, short[] ends, short[] starts, short[] betweens) {
         int pos = getInitialPos(k, keyArray);
         int curr = keyArray[pos];
         // find proper key first
@@ -179,7 +177,7 @@ public class UnigramOpenHashMap {
         }
         return false;
     }
-    private boolean putHelpValue(int k, int v, int[] keyArray, int[] valueArray) {
+    private boolean putHelpValue(int k, short v, int[] keyArray, short[] valueArray) {
         int pos = getInitialPos(k, keyArray);
         int curr = keyArray[pos];
         // find proper key first
@@ -198,7 +196,7 @@ public class UnigramOpenHashMap {
         }
         return false;
     }
-    private boolean putHelpEnd(int k, int e, int[] keyArray, int[] endArray) {
+    private boolean putHelpEnd(int k, short e, int[] keyArray, short[] endArray) {
         int pos = getInitialPos(k, keyArray);
         int curr = keyArray[pos];
         // find proper key first
@@ -217,7 +215,7 @@ public class UnigramOpenHashMap {
         }
         return false;
     }
-    private boolean putHelpStart(int k, int s, int[] keyArray, int[] startArray) {
+    private boolean putHelpStart(int k, short s, int[] keyArray, short[] startArray) {
         int pos = getInitialPos(k, keyArray);
         int curr = keyArray[pos];
         // find proper key first
@@ -236,7 +234,7 @@ public class UnigramOpenHashMap {
         }
         return false;
     }
-    private boolean putHelpBetween(int k, int b, int[] keyArray, int[] betweenArray) {
+    private boolean putHelpBetween(int k, short b, int[] keyArray, short[] betweenArray) {
         int pos = getInitialPos(k, keyArray);
         int curr = keyArray[pos];
         // find proper key first
@@ -274,23 +272,35 @@ public class UnigramOpenHashMap {
 //        return hash%sizeInTheory;
     }
 
-    // 4 getters
-    public int getValue(int k) {
+    // 5 getters
+    public short[] getAllRanks(int k) {
+        int pos = find(k);
+
+        short[] results = new short[4];
+        results[0] = values[pos];
+        results[1] = bigramEndsWithThis[pos];
+        results[2] = bigramStartsWithThis[pos];
+        results[3] = bigramWithThisInBetween[pos];
+
+        return results;
+    }
+
+    public short getValueRank(int k) {
         int pos = find(k);
 
         return values[pos];
     }
-    public int getBigramEndsWithThis(int k) {
+    public short getBigramEndsWithThisRank(int k) {
         int pos = find(k);
 
         return bigramEndsWithThis[pos];
     }
-    public int getBigramStartsWithThis(int k) {
+    public short getBigramStartsWithThisRank(int k) {
         int pos = find(k);
 
         return bigramStartsWithThis[pos];
     }
-    public int getBigramWithThisInBetween(int k) {
+    public short getBigramWithThisInBetweenRank(int k) {
         int pos = find(k);
 
         return bigramWithThisInBetween[pos];
@@ -307,42 +317,42 @@ public class UnigramOpenHashMap {
         return pos;
     }
 
-    public void incrementValue(int k, int v) {
+    public void incrementValue(int k, short v) {
         int pos = find(k);
         int currKey = keys[pos];
         // key is new
         if (currKey == EMPTY_KEY) {
-            putValue(k, v);
+            putValueRank(k, v);
         } else
             values[pos]++;
     }
-    public void incrementEnd(int k, int e) {
+    public void incrementEnd(int k, short e) {
         int pos = find(k);
         int currKey = keys[pos];
         // key is new
         if (currKey == EMPTY_KEY) {
-            putEnd(k, e);
+            putEndRank(k, e);
         } else {
             bigramEndsWithThis[pos]++;
             totalBigramEndsWithThis++;
         }
     }
-    public void incrementStart(int k, int s) {
+    public void incrementStart(int k, short s) {
         int pos = find(k);
         int currKey = keys[pos];
         // key is new
         if (currKey == EMPTY_KEY) {
-            putStart(k, s);
+            putStartRank(k, s);
         } else
             bigramStartsWithThis[pos]++;
 
     }
-    public void incrementBetween(int k, int b) {
+    public void incrementBetween(int k, short b) {
         int pos = find(k);
         int currKey = keys[pos];
         // key is new
         if (currKey == EMPTY_KEY) {
-            putBetween(k, b);
+            putBetweenRank(k, b);
         } else
             bigramWithThisInBetween[pos]++;
     }
@@ -354,7 +364,7 @@ public class UnigramOpenHashMap {
          * @param key
          * @param value
          */
-        public Entry(int key, int value, int end, int start, int between) {
+        public Entry(int key, short value, short end, short start, short between) {
             super();
             this.key = key;
             this.value = value;
@@ -364,37 +374,37 @@ public class UnigramOpenHashMap {
         }
 
         public int key;
-        public int value;
-        public int end;
-        public int start;
-        public int between;
+        public short value;
+        public short end;
+        public short start;
+        public short between;
 
         public int getKey() {
             return key;
         }
-        public int getValue() {
+        public short getValue() {
             return value;
         }
-        public int getEnd() {
+        public short getEnd() {
             return end;
         }
-        public int getStart() {
+        public short getStart() {
             return start;
         }
-        public int getBetween() {
+        public short getBetween() {
             return between;
         }
-        public int[] getAllValues() {
-            return new int[] {value, end, start, between};
+        public short[] getAllRanks() {
+            return new short[] {value, end, start, between};
         }
     }
 
-    private class EntryIterator extends UnigramOpenHashMap.MapIterator<UnigramOpenHashMap.Entry>
+    private class EntryIterator extends UnigramOpenHashMapWithRank.MapIterator<UnigramOpenHashMapWithRank.Entry>
     {
-        public UnigramOpenHashMap.Entry next() {
+        public UnigramOpenHashMapWithRank.Entry next() {
             final int nextIndex = nextIndex();
             //access arrays of values from mother class
-            return new UnigramOpenHashMap.Entry(keys[nextIndex], values[nextIndex],
+            return new UnigramOpenHashMapWithRank.Entry(keys[nextIndex], values[nextIndex],
                     bigramEndsWithThis[nextIndex], bigramStartsWithThis[nextIndex], bigramWithThisInBetween[nextIndex]);
         }
     }
@@ -426,8 +436,8 @@ public class UnigramOpenHashMap {
         private int next, end;
     }
 
-    public Iterable<UnigramOpenHashMap.Entry> entrySet() {
-        return CollectionUtils.iterable(new UnigramOpenHashMap.EntryIterator());
+    public Iterable<UnigramOpenHashMapWithRank.Entry> entrySet() {
+        return CollectionUtils.iterable(new UnigramOpenHashMapWithRank.EntryIterator());
     }
 
     public int size() {
@@ -441,6 +451,9 @@ public class UnigramOpenHashMap {
     public int getTotalBigramEndsWithThis() {
         return totalBigramEndsWithThis;
     }
+    public void setTotalBigramEndsWithThis(int v) {
+        totalBigramEndsWithThis = v;
+    }
     /**
      * Optimization method to free up unused entries in this map
      *
@@ -449,7 +462,7 @@ public class UnigramOpenHashMap {
         System.out.println("This map has the utilization of " + 100 * size() / (double) actualSize() + "%. Now optimizing...");
 
         int[] newKeys = new int[size];
-        int[] newValues = new int[size];
+        short[] newValues = new short[size];
         int j = 0;
 
         for (int i=0; i<values.length; i++) {
