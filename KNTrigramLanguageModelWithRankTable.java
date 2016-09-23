@@ -35,9 +35,9 @@ public class KNTrigramLanguageModelWithRankTable implements NgramLanguageModel {
     public BigramOpenHashMap bigramMap = new BigramOpenHashMap(100000);
     public TrigramOpenHashMap trigramMap = new TrigramOpenHashMap(1000000);
 
-    public UnigramOpenHashMapWithRank unigramMapWithRank = new UnigramOpenHashMapWithRank(50000);
-    public BigramOpenHashMapWithRank bigramMapWithRank = new BigramOpenHashMapWithRank(100000);
-    public TrigramOpenHashMapWithRank trigramMapWithRank = new TrigramOpenHashMapWithRank(1000000);
+    public UnigramOpenHashMapWithRank unigramMapWithRank = null;
+    public BigramOpenHashMapWithRank bigramMapWithRank = null;
+    public TrigramOpenHashMapWithRank trigramMapWithRank = null;
 
     /**
      * Constructor
@@ -85,15 +85,18 @@ public class KNTrigramLanguageModelWithRankTable implements NgramLanguageModel {
     // BEGIN - helper methods for constructor
     private void rebuildNgramMapsWithRanks(){
         rebuildUnigramMapWithRanks();
-        rebuildBigramMapWithRanks();
+
         rebuildTrigramMapWithRanks();
+        rebuildBigramMapWithRanks();
         cleanUpAfterRebuildingHashMaps();
         optimizeStorageAfterClearning();
     }
     private void rebuildUnigramMapWithRanks() {
         RankIndexerInteger indexer = TrigramCountIndexer.getIndexer();
+        unigramMapWithRank = new UnigramOpenHashMapWithRank(unigramMap.size()*3/2);
         // iterate though unigram maps to get all keys
         // get ranks and update to unigram Map
+
         Iterable<UnigramOpenHashMap.Entry> unigramEntrySet = unigramMap.entrySet();
         System.out.println("Rebuilding Unigram Map ...");
         for (UnigramOpenHashMap.Entry entryKV : unigramEntrySet) {
@@ -110,11 +113,15 @@ public class KNTrigramLanguageModelWithRankTable implements NgramLanguageModel {
             short betweenRank = indexer.addAndGetIndex(between);
 
             unigramMapWithRank.putRanks(key, valueRank, endRank, startRank, betweenRank);
-            //important
-            unigramMapWithRank.setTotalBigramEndsWithThis(unigramMap.getTotalBigramEndsWithThis());
         }
+        //important
+        unigramMapWithRank.setTotalBigramEndsWithThis(unigramMap.getTotalBigramEndsWithThis());
+        // remove
+//        unigramMap = null;
+//        System.gc();
     }
     private void rebuildBigramMapWithRanks() {
+        bigramMapWithRank = new BigramOpenHashMapWithRank(bigramMap.size()*2);
         RankIndexerInteger indexer = TrigramCountIndexer.getIndexer();
         // iterate though unigram maps to get all keys
         // get ranks and update to unigram Map
@@ -132,9 +139,13 @@ public class KNTrigramLanguageModelWithRankTable implements NgramLanguageModel {
             short startRank = indexer.addAndGetIndex(start);
 
             bigramMapWithRank.putRanks(key, valueRank, endRank, startRank);
+            //remove
+//            bigramMap = null;
+//            System.gc();
         }
     }
     private void rebuildTrigramMapWithRanks() {
+        trigramMapWithRank = new TrigramOpenHashMapWithRank(trigramMap.size()*3/2);
         RankIndexerInteger indexer = TrigramCountIndexer.getIndexer();
         // iterate though unigram maps to get all keys
         // get ranks and update to unigram Map
@@ -147,6 +158,9 @@ public class KNTrigramLanguageModelWithRankTable implements NgramLanguageModel {
             short valueRank = indexer.addAndGetIndex(value);
             trigramMapWithRank.putRank(key, valueRank);
         }
+        //remove
+//        trigramMap = null;
+//        System.gc();
     }
 
     private void cleanUpAfterRebuildingHashMaps() {
@@ -155,14 +169,20 @@ public class KNTrigramLanguageModelWithRankTable implements NgramLanguageModel {
         bigramMap = null;
         trigramMap = null;
         System.gc();
-        System.gc();
         System.out.println("Cleaning is done!");
     }
 
+    private void optimizeStorage(){
+        System.out.println("Now optimizing to save some space for new hashmaps ...");
+        unigramMap.autoOptimizeStorage();
+        bigramMap.autoOptimizeStorage();
+        trigramMap.autoOptimizeStorage();
+    }
     private void optimizeStorageAfterClearning() {
-        unigramMapWithRank.rehash(0.7);
-        bigramMapWithRank.rehash(0.8);
-        trigramMapWithRank.rehash(0.7);
+        System.out.println("Now optmizing new hashmaps ...");
+        unigramMapWithRank.autoOptimizeStorage();
+        bigramMapWithRank.autoOptimizeStorage();
+        trigramMapWithRank.autoOptimizeStorage();
     }
     private void calculateTokensInTheMiddleOfSentence(List<String> stoppedSentence, int i, int idxW3) {
         int idxW2 = EnglishWordIndexer.getIndexer().addAndGetIndex(stoppedSentence.get(i-1));
@@ -264,17 +284,6 @@ public class KNTrigramLanguageModelWithRankTable implements NgramLanguageModel {
         return idxW3;
     }
 
-    private void optimizeStorage() {
-        System.out.println("Optimizing storage for hash maps...");
-//        unigramMap.optimizeStorage(1.2);
-//        bigramMap.optimizeStorage(1.2);
-//        trigramMap.optimizeStorage(1.2);
-        unigramMap.rehash(0.7);
-        bigramMap.rehash(0.8);
-        trigramMap.rehash(0.75);
-
-        System.out.println("Optimization complete!");
-    }
     private void consolidateStats(){
         unigramVocabSize = unigramMap.size();
         bigramVocabSize = bigramMap.size();

@@ -94,7 +94,6 @@ public class BigramOpenHashMapWithRank {
                 short val = values[i];
                 short end = trigramEndsWithThis[i];
                 short start = trigramStartsWithThis[i];
-                // TODO: fix this
                 putHelp(curr, val, end, start, newKeys, newValues, newtrigramEndsWithThis, newtrigramStartsWithThis);
             }
         }
@@ -217,7 +216,7 @@ public class BigramOpenHashMapWithRank {
 
     private int getInitialPos(long k, long[] keyArray) {
         int hash = getHashCode(k);
-        int pos = (int) hash % keyArray.length;
+        int pos = hash % keyArray.length;
         if (pos < 0) pos += keyArray.length;
         // N.B. Doing it this old way causes Integer.MIN_VALUE to be
         // handled incorrect since -Integer.MIN_VALUE is still
@@ -374,6 +373,15 @@ public class BigramOpenHashMapWithRank {
         return CollectionUtils.iterable(new BigramOpenHashMapWithRank.EntryIterator());
     }
 
+    public long[] getKeys() {
+        long[] k = new long[size];
+        int j = 0;
+        for (int i = 0; i<keys.length; i++) {
+            if (keys[i] != -1)
+                k[j++] = keys[i];
+        }
+        return k;
+    }
     public int size() {
         return size;
     }
@@ -404,5 +412,9 @@ public class BigramOpenHashMapWithRank {
         values = newValues;
 
         rehash(expandedRatio);
+    }
+    public void autoOptimizeStorage(){
+        double utilization = size / (double) actualSize();
+        rehash(utilization + 0.2);
     }
 }
