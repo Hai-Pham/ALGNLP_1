@@ -15,8 +15,7 @@ public class LmFactory implements LanguageModelFactory
    * @param trainingData
 				*/
 		public NgramLanguageModel newLanguageModel(Iterable<List<String>> trainingData) {
-//		return new NaiveTrigramLanguageModel(trainingData);
-//		return new KNNaiveTrigramLanguageModel(trainingData);
-			return new KNTrigramLanguageModel(trainingData);
+//			return new KNTrigramLanguageModel(trainingData);
+			return new KNTrigramLanguageModelWithRankTable(trainingData);
 	}
 }

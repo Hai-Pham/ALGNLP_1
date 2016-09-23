@@ -12,9 +12,9 @@ public class TrigramCountIndexer {
      * @author adampauls
      *
      */
-    private static RankIndexerLong indexer = new RankIndexerLong();
+    private static RankIndexerInteger indexer = new RankIndexerInteger();
 
-    public static RankIndexerLong getIndexer() {
+    public static RankIndexerInteger getIndexer() {
         return indexer;
     }
 }

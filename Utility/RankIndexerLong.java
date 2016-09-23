@@ -23,9 +23,11 @@ public class RankIndexerLong implements Serializable
     /**
      * Return the object with the given index
      *
-     * @param index
+     * @param index: short (beware of this limit)
      */
-    public Long get(int index) {
+    public Long get(short index) {
+        if (index <0)
+            return 0L;
         return objects.get(index);
     }
 

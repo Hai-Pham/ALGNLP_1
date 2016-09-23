@@ -138,21 +138,21 @@ public class UtilityTest {
 //        }
 //    }
 
-    @Test
-    public void testLongShortOpenHashMap() {
-        Random rand = new Random();
-        LongShortOpenHashMap testMap = new LongShortOpenHashMap(20);
-        for (int i=0; i<10000; i++) {
-            testMap.put(rand.nextLong(), (short)i);
-        }
-        System.out.println("size of test Map is " + testMap.size() + " with actual size is " + testMap.actualSize());
-
-        Iterable<LongShortOpenHashMap.Entry> entrySet = testMap.entrySet();
-        System.out.println("Map content: ");
-        for (LongShortOpenHashMap.Entry entryKV: entrySet) {
-            System.out.println(entryKV.getKey() + ":" + entryKV.getValue());
-        }
-    }
+//    @Test
+//    public void testLongShortOpenHashMap() {
+//        Random rand = new Random();
+//        LongShortOpenHashMap testMap = new LongShortOpenHashMap(20);
+//        for (int i=0; i<10000; i++) {
+//            testMap.put(rand.nextLong(), (short)i);
+//        }
+//        System.out.println("size of test Map is " + testMap.size() + " with actual size is " + testMap.actualSize());
+//
+//        Iterable<LongShortOpenHashMap.Entry> entrySet = testMap.entrySet();
+//        System.out.println("Map content: ");
+//        for (LongShortOpenHashMap.Entry entryKV: entrySet) {
+//            System.out.println(entryKV.getKey() + ":" + entryKV.getValue());
+//        }
+//    }
 
 
 //    @Test
@@ -211,44 +211,35 @@ public class UtilityTest {
 //        System.out.println("Size of hashmap is " + testMap.size());
 //    }
 
-    @Test
-    public void smallArrayCopyTest() {
-        int[] k = new int[20];
-        for (int i=0; i<k.length; i++) {
-            k[i] = i;
-            System.out.print(k[i] + " ");
-        }
-        System.out.println();
-
-        int[] kk = new int[10];
-        int j = 0;
-        for (int i=0; i<k.length; i++) {
-            if (k[i]%2 != 0) {
-                kk[j] = k[i];
-                j++;
-            }
-        }
-        k = null;
-        System.gc();
-
-        for (int i: kk)
-            System.out.print(i + " ");
-        System.out.println();
-        System.out.println(kk.length);
-        System.out.println("Done!");
-    }
 
     @Test
-    public void listTest() {
-        String s1 = "a b c a b c";
-        List<String> testList = new ArrayList<>(Arrays.asList(s1.split(" ")));
-//        testList.add("a b c ");
-//        testList.add("d e f ");
-//        testList.add("g h i");
+    public void testUnigramOpenHashMap() {
+        Random rand = new Random();
+        UnigramOpenHashMapWithRank testMap = new UnigramOpenHashMapWithRank(20);
+        for (short i=0; i<100; i++) {
+//            testMap.put(i, i, i, i, i);
+            testMap.putRanks(i, i, (short)100, (short)0, (short)1);
+//            testMap.incrementEnd(i, 1);
+//            testMap.incrementStart(i, 20);//just increment 1
+//            testMap.incrementBetween(i, 30);
+//            testMap.incrementBetween(i, 30);
+//            testMap.incrementBetween(i, 30);
+//            testMap.incrementEnd(i, 1);
+//            testMap.putEndRank(i, 10);
+//            testMap.putValueRank(i, i*2);
+//            testMap.putBetweenRank(i, i-1);
+//            testMap.incrementValue(i, 1);
+        }
+        Iterable<UnigramOpenHashMapWithRank.Entry> entrySet = testMap.entrySet();
+        System.out.println("Map content: ");
+        for (UnigramOpenHashMapWithRank.Entry entryKV: entrySet) {
+            System.out.println(entryKV.getKey() + " : " + entryKV.getValue() + " " + entryKV.getEnd() + " " +
+                    entryKV.getStart() + " " + entryKV.getBetween());
+        }
+        System.out.println("Hash map size is " + testMap.size());
 
-        System.out.println("Size of list is " + testList.size());
-        System.out.println(testList.get(0));
-        System.out.println(testList.get(1));
-        System.out.println(testList.get(testList.size()-1));
+        // find an unknown key
+        System.out.println("Unknown key gives a result = " + testMap.getValueRank(1000) + " " + testMap.getBigramEndsWithThisRank(1000));
     }
+
 }

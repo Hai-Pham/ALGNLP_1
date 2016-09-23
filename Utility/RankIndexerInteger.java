@@ -25,6 +25,8 @@ public class RankIndexerInteger implements Serializable
      * @param index
      */
     public Integer get(int index) {
+        if (index <0)
+            return 0;
         return objects.get(index);
     }
 
@@ -54,7 +56,7 @@ public class RankIndexerInteger implements Serializable
      * @param e
      * @return
      */
-    public int addAndGetIndex(int e) {
+    public short addAndGetIndex(int e) {
         short index = indexes.get(e);
         if (index >= 0) { return index; }
         //  Else, add

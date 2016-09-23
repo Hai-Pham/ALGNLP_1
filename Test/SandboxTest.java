@@ -108,5 +108,44 @@ public class SandboxTest {
 //            System.out.println(i);
 //
 //    }
+@Test
+public void smallArrayCopyTest() {
+    int[] k = new int[20];
+    for (int i=0; i<k.length; i++) {
+        k[i] = i;
+        System.out.print(k[i] + " ");
+    }
+    System.out.println();
 
+    int[] kk = new int[10];
+    int j = 0;
+    for (int i=0; i<k.length; i++) {
+        if (k[i]%2 != 0) {
+            kk[j] = k[i];
+            j++;
+        }
+    }
+    k = null;
+    System.gc();
+
+    for (int i: kk)
+        System.out.print(i + " ");
+    System.out.println();
+    System.out.println(kk.length);
+    System.out.println("Done!");
+}
+
+    @Test
+    public void listTest() {
+        String s1 = "a b c a b c";
+        List<String> testList = new ArrayList<>(Arrays.asList(s1.split(" ")));
+//        testList.add("a b c ");
+//        testList.add("d e f ");
+//        testList.add("g h i");
+
+        System.out.println("Size of list is " + testList.size());
+        System.out.println(testList.get(0));
+        System.out.println(testList.get(1));
+        System.out.println(testList.get(testList.size()-1));
+    }
 }

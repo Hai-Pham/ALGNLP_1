@@ -39,7 +39,7 @@ public class TrigramOpenHashMapWithRank {
         int cap = Math.max(5, (int) (initialCapacity_ / loadFactor));
         MAX_LOAD_FACTOR = loadFactor;
         values = new short[cap];
-        Arrays.fill(values, (short)0);
+        Arrays.fill(values, (short)-1);
         keys = new long[cap];
         Arrays.fill(keys, -1); // added to avoid collision with k = 0
         sizeInTheory = initialCapacity_;
@@ -49,7 +49,7 @@ public class TrigramOpenHashMapWithRank {
     private void rehash() {
         long[] newKeys = new long[keys.length * 3 / 2];
         short[] newValues = new short[values.length * 3 / 2];
-        Arrays.fill(newValues, (short)0);
+        Arrays.fill(newValues, (short)-1);
         Arrays.fill(newKeys, -1);
         size = 0;
         for (int i = 0; i < keys.length; ++i) {
@@ -65,7 +65,7 @@ public class TrigramOpenHashMapWithRank {
     public void rehash(double expandedRatio) {
         long[] newKeys = new long[(int)(keys.length * expandedRatio)];
         short[] newValues = new short[(int)(values.length * expandedRatio)];
-        Arrays.fill(newValues, (short)0);
+        Arrays.fill(newValues, (short)-1);
         Arrays.fill(newKeys, -1);
         size = 0;
         for (int i = 0; i < keys.length; ++i) {

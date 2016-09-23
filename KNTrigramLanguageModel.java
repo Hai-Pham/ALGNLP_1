@@ -275,15 +275,15 @@ public class KNTrigramLanguageModel implements NgramLanguageModel {
     private double knScoreBigram(int[] ngram, int to) {
         // count denominator to back-off in edge case
         int countInBetweenW2 = unigramMap.getBigramWithThisInBetween(ngram[to-2]); // count(.w2.)
-        if (countInBetweenW2 == 0)
+        if (countInBetweenW2 == 0) {
             return knScoreUnigram(ngram, to); // complete back-off
+        }
 
         double bigramKNScore = 0.0;
 
         //encode bigram (as a continuation) for numerator W2W3
         long bigramBitPacking = Assignment1Utility.bitPackingBigram(ngram[to-2], ngram[to-1]);
         double numerator = SloppyMath.max((double)bigramMap.gettrigramEndsWithThis(bigramBitPacking) - D, 0.0);
-
         bigramKNScore += numerator / (double) countInBetweenW2;
         bigramKNScore += calculateAlphaUnigram(ngram[to-2]) * knScoreUnigram(ngram, to);
 

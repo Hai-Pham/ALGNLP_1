@@ -76,10 +76,10 @@ public class UnigramOpenHashMapWithRank {
         bigramEndsWithThis = new short[cap];
         bigramStartsWithThis = new short[cap];
         bigramWithThisInBetween = new short[cap];
-        Arrays.fill(values, (short)0);
-        Arrays.fill(bigramEndsWithThis, (short)0);
-        Arrays.fill(bigramStartsWithThis, (short)0);
-        Arrays.fill(bigramWithThisInBetween, (short)0);
+        Arrays.fill(values, (short)-1);
+        Arrays.fill(bigramEndsWithThis, (short)-1);
+        Arrays.fill(bigramStartsWithThis, (short)-1);
+        Arrays.fill(bigramWithThisInBetween, (short)-1);
 
         keys = new int[cap];
         Arrays.fill(keys, -1); // added to avoid collision with k = 0
@@ -94,10 +94,10 @@ public class UnigramOpenHashMapWithRank {
         short[] newBigramStartsWithThis = new short[values.length * 3 / 2];
         short[] newBigramWithThisInBetween = new short[values.length * 3 / 2];
 
-        Arrays.fill(newValues, (short)0);
-        Arrays.fill(newBigramEndsWithThis, (short)0);
-        Arrays.fill(newBigramStartsWithThis, (short)0);
-        Arrays.fill(newBigramWithThisInBetween, (short)0);
+        Arrays.fill(newValues, (short)-1);
+        Arrays.fill(newBigramEndsWithThis, (short)-1);
+        Arrays.fill(newBigramStartsWithThis, (short)-1);
+        Arrays.fill(newBigramWithThisInBetween, (short)-1);
         Arrays.fill(newKeys, -1);
         size = 0;
         for (int i = 0; i < keys.length; ++i) {
@@ -126,10 +126,10 @@ public class UnigramOpenHashMapWithRank {
         short[] newBigramStartsWithThis = new short[(int) (values.length * expandedRatio)];
         short[] newBigramWithThisInBetween = new short[(int) (values.length * expandedRatio)];
 
-        Arrays.fill(newValues, (short)0);
-        Arrays.fill(newBigramEndsWithThis, (short)0);
-        Arrays.fill(newBigramStartsWithThis, (short)0);
-        Arrays.fill(newBigramWithThisInBetween, (short)0);
+        Arrays.fill(newValues, (short)-1);
+        Arrays.fill(newBigramEndsWithThis, (short)-1);
+        Arrays.fill(newBigramStartsWithThis, (short)-1);
+        Arrays.fill(newBigramWithThisInBetween, (short)-1);
         Arrays.fill(newKeys, -1);
         size = 0;
         for (int i = 0; i < keys.length; ++i) {

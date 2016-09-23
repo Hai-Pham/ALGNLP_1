@@ -67,9 +67,9 @@ public class BigramOpenHashMapWithRank {
         values = new short[cap];
         trigramEndsWithThis = new short[cap];
         trigramStartsWithThis = new short[cap];
-        Arrays.fill(values, (short)0);
-        Arrays.fill(trigramEndsWithThis, (short)0);
-        Arrays.fill(trigramStartsWithThis, (short)0);
+        Arrays.fill(values, (short)-1);
+        Arrays.fill(trigramEndsWithThis, (short)-1);
+        Arrays.fill(trigramStartsWithThis, (short)-1);
 
         keys = new long[cap];
         Arrays.fill(keys, -1); // added to avoid collision with k = 0
@@ -83,9 +83,9 @@ public class BigramOpenHashMapWithRank {
         short[] newtrigramEndsWithThis = new short[values.length * 3 / 2];
         short[] newtrigramStartsWithThis = new short[values.length * 3 / 2];
 
-        Arrays.fill(newValues, (short)0);
-        Arrays.fill(newtrigramEndsWithThis, (short)0);
-        Arrays.fill(newtrigramStartsWithThis, (short)0);
+        Arrays.fill(newValues, (short)-1);
+        Arrays.fill(newtrigramEndsWithThis, (short)-1);
+        Arrays.fill(newtrigramStartsWithThis, (short)-1);
         Arrays.fill(newKeys, -1);
         size = 0;
         for (int i = 0; i < keys.length; ++i) {
@@ -111,9 +111,9 @@ public class BigramOpenHashMapWithRank {
         short[] newtrigramEndsWithThis = new short[(int)(values.length * expandedRatio)];
         short[] newtrigramStartsWithThis = new short[(int)(values.length * expandedRatio)];
 
-        Arrays.fill(newValues, (short)0);
-        Arrays.fill(newtrigramEndsWithThis, (short)0);
-        Arrays.fill(newtrigramStartsWithThis, (short)0);
+        Arrays.fill(newValues, (short)-1);
+        Arrays.fill(newtrigramEndsWithThis, (short)-1);
+        Arrays.fill(newtrigramStartsWithThis, (short)-1);
         Arrays.fill(newKeys, -1);
         size = 0;
         for (int i = 0; i < keys.length; ++i) {
