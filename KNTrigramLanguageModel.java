@@ -25,7 +25,7 @@ public class KNTrigramLanguageModel implements NgramLanguageModel {
     static final String START = NgramLanguageModel.START;
 
     // constant D for smoothing
-    static final double D = 0.75;
+    static final double D = 0.95;
 
     // N - made public for small test
     public long totalUnigram = 0;
@@ -36,10 +36,13 @@ public class KNTrigramLanguageModel implements NgramLanguageModel {
     public long bigramVocabSize = 0;
     public long trigramVocabSize = 0;
     // Counters - made public for small test
-    public UnigramOpenHashMap unigramMap = new UnigramOpenHashMap(50000);
-    public BigramOpenHashMap bigramMap = new BigramOpenHashMap(100000);
-    public TrigramOpenHashMap trigramMap = new TrigramOpenHashMap(1000000);
+//    public UnigramOpenHashMap unigramMap = new UnigramOpenHashMap(50000);
+//    public BigramOpenHashMap bigramMap = new BigramOpenHashMap(100000);
+//    public TrigramOpenHashMap trigramMap = new TrigramOpenHashMap(1000000);
 
+    public UnigramOpenHashMap unigramMap = new UnigramOpenHashMap(280000);
+    public BigramOpenHashMap bigramMap = new BigramOpenHashMap(4700000);
+    public TrigramOpenHashMap trigramMap = new TrigramOpenHashMap(30000000);
     /**
      * Constructor
      * Declaration about the order of Ngrams
@@ -252,7 +255,7 @@ public class KNTrigramLanguageModel implements NgramLanguageModel {
     @Override
     public double getNgramLogProbability(int[] ngram, int from, int to) {
         // swith among various methods of smoothing to investigate
-        return Math.log(knScoreGeneral(ngram, from, to) + 1e-20);
+        return Math.log(knScoreGeneral(ngram, from, to) + 1e-50);
     }
 
     public double knScoreGeneral(int[] ngram, int from, int to) {
@@ -268,7 +271,7 @@ public class KNTrigramLanguageModel implements NgramLanguageModel {
     private double knScoreUnigram(int[] ngram, int to) {
         int count = unigramMap.getBigramEndsWithThis(ngram[to-1]); //w3
         if (count == 0)
-            return 1e-20;
+            return 1e-50;
         else
             return unigramMap.getBigramEndsWithThis(ngram[to-1]) / (double) unigramMap.getTotalBigramEndsWithThis();
     }
@@ -321,5 +324,4 @@ public class KNTrigramLanguageModel implements NgramLanguageModel {
         alpha /= (double) bigramMap.getValue(bigramBitPacking);
         return alpha;
     }
-
 }

@@ -7,6 +7,8 @@ import org.junit.Test;
 
 import java.util.*;
 
+import static org.junit.Assert.assertEquals;
+
 /**
  * Created by Gorilla on 9/15/2016.
  */
@@ -414,31 +416,31 @@ public class KNLanguageModelTest {
         }
     }
 
-//    @Test
-//    public void KNNaiveTrigramLanguageModelCOUNTTest() {
-//        ArrayList<List<String>> sentences = prepareSmallCorpus();
-//        KNTrigramLanguageModel languageModel = new KNTrigramLanguageModel(sentences);
-//
-//        // count unigram
-//        assertEquals(languageModel.getCount(new int[]{1}), 3); // a
-//        assertEquals(languageModel.getCount(new int[]{0}), 2); // <s>
-//        assertEquals(languageModel.getCount(new int[]{3}), 4); // c
-//
-//        // count bigram
-//        assertEquals(languageModel.getCount(new int[]{0, 1}), 1); // <s> a
-//        assertEquals(languageModel.getCount(new int[]{1, 2}), 3); // a b
-//        assertEquals(languageModel.getCount(new int[]{2, 3}), 4); // b c
-//
-//        // count trigram
-//        assertEquals(languageModel.getCount(new int[]{0, 1, 2}), 1); // <s> a b
-//        assertEquals(languageModel.getCount(new int[]{1, 2, 3}), 3); // a b c
-//        assertEquals(languageModel.getCount(new int[]{2, 3, 4}), 2); // b c d
-//
-//        // edge cases
-//        assertEquals(languageModel.getCount(new int[]{}), 0);
-//        assertEquals(languageModel.getCount(new int[]{1, 2, 3, 4}), 0);
-//    }
-//
+    @Test
+    public void KNNaiveTrigramLanguageModelCOUNTTest() {
+        ArrayList<List<String>> sentences = prepareSmallCorpus();
+        KNTrigramLanguageModel languageModel = new KNTrigramLanguageModel(sentences);
+
+        // count unigram
+        assertEquals(languageModel.getCount(new int[]{1}), 3); // a
+        assertEquals(languageModel.getCount(new int[]{0}), 2); // <s>
+        assertEquals(languageModel.getCount(new int[]{3}), 4); // c
+
+        // count bigram
+        assertEquals(languageModel.getCount(new int[]{0, 1}), 1); // <s> a
+        assertEquals(languageModel.getCount(new int[]{1, 2}), 3); // a b
+        assertEquals(languageModel.getCount(new int[]{2, 3}), 4); // b c
+
+        // count trigram
+        assertEquals(languageModel.getCount(new int[]{0, 1, 2}), 1); // <s> a b
+        assertEquals(languageModel.getCount(new int[]{1, 2, 3}), 3); // a b c
+        assertEquals(languageModel.getCount(new int[]{2, 3, 4}), 2); // b c d
+
+        // edge cases
+        assertEquals(languageModel.getCount(new int[]{}), 0);
+        assertEquals(languageModel.getCount(new int[]{1, 2, 3, 4}), 0);
+    }
+
     @Test
     public void KNNaiveTrigramLanguageModelLOG_PROBABILITYTest() {
         ArrayList<List<String>> sentences = prepareSmallCorpus();
@@ -447,15 +449,17 @@ public class KNLanguageModelTest {
         System.out.println("Testing LOG PROBABILITY BEGINS");
         int[] unigramArray = new int[] {0, 1, 2, 3, 4, 5, 6, 7};
 
-//        System.out.println(languageModel.knScoreGeneral(unigramArray, 0, 1));
-//        System.out.println(languageModel.knScoreGeneral(unigramArray, 1, 2));
-//        System.out.println(languageModel.knScoreGeneral(unigramArray, 2, 3));
-//        System.out.println(languageModel.knScoreGeneral(unigramArray, 3, 4));
-//        System.out.println(languageModel.knScoreGeneral(unigramArray, 4, 5));
-//        System.out.println(languageModel.knScoreGeneral(unigramArray, 5, 6));
-//        System.out.println(languageModel.knScoreGeneral(unigramArray, 6, 7));
-//        System.out.println(languageModel.knScoreGeneral(unigramArray, 7, 8));
+        System.out.println("unigram LOG");
+        System.out.println(languageModel.knScoreGeneral(unigramArray, 0, 1));
+        System.out.println(languageModel.knScoreGeneral(unigramArray, 1, 2));
+        System.out.println(languageModel.knScoreGeneral(unigramArray, 2, 3));
+        System.out.println(languageModel.knScoreGeneral(unigramArray, 3, 4));
+        System.out.println(languageModel.knScoreGeneral(unigramArray, 4, 5));
+        System.out.println(languageModel.knScoreGeneral(unigramArray, 5, 6));
+        System.out.println(languageModel.knScoreGeneral(unigramArray, 6, 7));
+        System.out.println(languageModel.knScoreGeneral(unigramArray, 7, 8));
 
+        System.out.println("bigram LOG");
         System.out.println(languageModel.knScoreGeneral(new int[] {3, 0}, 0, 2));
         System.out.println(languageModel.knScoreGeneral(new int[] {3, 1}, 0, 2));
         System.out.println(languageModel.knScoreGeneral(new int[] {3, 2}, 0, 2));
@@ -465,7 +469,7 @@ public class KNLanguageModelTest {
         System.out.println(languageModel.knScoreGeneral(new int[] {3, 6}, 0, 2));
         System.out.println(languageModel.knScoreGeneral(new int[] {3, 7}, 0, 2));
 
-        System.out.println();
+        System.out.println("triigram LOG");
         System.out.println(languageModel.knScoreGeneral(new int[] {1, 2, 0}, 0, 3));
         System.out.println(languageModel.knScoreGeneral(new int[] {1, 2, 1}, 0, 3));
         System.out.println(languageModel.knScoreGeneral(new int[] {1, 2, 2}, 0, 3));
@@ -474,6 +478,37 @@ public class KNLanguageModelTest {
         System.out.println(languageModel.knScoreGeneral(new int[] {1, 2, 5}, 0, 3));
         System.out.println(languageModel.knScoreGeneral(new int[] {1, 2, 6}, 0, 3));
         System.out.println(languageModel.knScoreGeneral(new int[] {1, 2, 7}, 0, 3));
+
+        System.out.println("LOG SCORE");
+        System.out.println(languageModel.getNgramLogProbability(unigramArray, 0, 1));
+        System.out.println(languageModel.getNgramLogProbability(unigramArray, 1, 2));
+        System.out.println(languageModel.getNgramLogProbability(unigramArray, 2, 3));
+        System.out.println(languageModel.getNgramLogProbability(unigramArray, 3, 4));
+        System.out.println(languageModel.getNgramLogProbability(unigramArray, 4, 5));
+        System.out.println(languageModel.getNgramLogProbability(unigramArray, 5, 6));
+        System.out.println(languageModel.getNgramLogProbability(unigramArray, 6, 7));
+        System.out.println(languageModel.getNgramLogProbability(unigramArray, 7, 8));
+
+        System.out.println();
+        System.out.println(languageModel.getNgramLogProbability(new int[] {3, 0}, 0, 2));
+        System.out.println(languageModel.getNgramLogProbability(new int[] {3, 1}, 0, 2));
+        System.out.println(languageModel.getNgramLogProbability(new int[] {3, 2}, 0, 2));
+        System.out.println(languageModel.getNgramLogProbability(new int[] {3, 3}, 0, 2));
+        System.out.println(languageModel.getNgramLogProbability(new int[] {3, 4}, 0, 2));
+        System.out.println(languageModel.getNgramLogProbability(new int[] {3, 5}, 0, 2));
+        System.out.println(languageModel.getNgramLogProbability(new int[] {3, 6}, 0, 2));
+        System.out.println(languageModel.getNgramLogProbability(new int[] {3, 7}, 0, 2));
+
+        System.out.println();
+        System.out.println(languageModel.getNgramLogProbability(new int[] {1, 2, 0}, 0, 3));
+        System.out.println(languageModel.getNgramLogProbability(new int[] {1, 2, 1}, 0, 3));
+        System.out.println(languageModel.getNgramLogProbability(new int[] {1, 2, 2}, 0, 3));
+        System.out.println(languageModel.getNgramLogProbability(new int[] {1, 2, 3}, 0, 3)); // unsmoothing = 1
+        System.out.println(languageModel.getNgramLogProbability(new int[] {1, 2, 4}, 0, 3));
+        System.out.println(languageModel.getNgramLogProbability(new int[] {1, 2, 5}, 0, 3));
+        System.out.println(languageModel.getNgramLogProbability(new int[] {1, 2, 6}, 0, 3));
+        System.out.println(languageModel.getNgramLogProbability(new int[] {1, 2, 7}, 0, 3));
+
 //        // base case: unigram
 //        System.out.println(languageModel.getNgramLogProbability(new int[]{0, 1, 2}, 0, 1));
 //        System.out.println(languageModel.getNgramLogProbability(new int[]{0, 1, 2}, 1, 2));

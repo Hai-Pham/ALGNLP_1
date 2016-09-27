@@ -271,7 +271,7 @@ public class UnigramOpenHashMap {
     private int getHashCode(int n) {
         return (int) ((131111L*n)^n^(1973*n)%sizeInTheory);
 //        int hash = ((int) (n ^ (n >>> 32)) * 3875239);
-//        return hash%sizeInTheory;
+//        return hash;
     }
 
     // 4 getters

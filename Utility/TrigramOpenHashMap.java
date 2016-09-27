@@ -112,7 +112,7 @@ public class TrigramOpenHashMap {
     private int getHashCode(long n) {
         return (int)((131111L*n)^n^(1973*n)%sizeInTheory);
 //        int hash = ((int) (n ^ (n >>> 32)) * 3875239);
-//        return hash%sizeInTheory;
+//        return hash;
     }
 
     public int get(long k) {

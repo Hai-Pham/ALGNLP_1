@@ -1,0 +1,96 @@
+D=0.75 KN no rank
+-------------STATS------------
+Number of unigram vocab=495172 and total unigram=281199874 and actual size=813606
+Number of total BigramEndsWith a word is 8374230
+Number of bigram vocab=8374230 and total bigram=272126622 and actual size=12356713
+Number of trigram vocab=41627672 and total trigram=263053370 and actual size=82378579
+-------------END OF STATS------------
+Optimizing storage for hash maps...
+Optimization complete!
+Done building KNNaiveTrigramLanguageModel.
+-------------STATS------------
+Number of unigram vocab=495172 and total unigram=281199874 and actual size=569524
+Number of total BigramEndsWith a word is 8374230
+Number of bigram vocab=8374230 and total bigram=272126622 and actual size=9885370
+Number of trigram vocab=41627672 and total trigram=263053370 and actual size=61783934
+-------------END OF STATS------------
+Performing spot checks...
+Count matches expected count 19880264 = 19880264 for [the]
+Count matches expected count 31257 = 31257 for [in, terms, of]
+Count matches expected count 30 = 30 for [romanian, independent, society]
+Count matches expected count 0 = 0 for [XXXtotally, XXXunseen, XXXtrigram]
+Distribution for context [in, terms] normalizes correctly, sums to 0.9999617265201742
+Distribution for context [romanian, independent] normalizes correctly, sums to 0.9997192648728511
+Distribution for context [the] normalizes correctly, sums to 0.9999999999998578
+Spot checks completed
+Reading phrase table from file .\phrasetable.txt.gz {
+Line 100000
+Line 200000
+Line 300000
+Line 400000
+Line 500000
+Line 600000
+Line 700000
+Line 800000
+Line 900000
+Line 1000000
+} [9s]
+Memory usage is 1.0G
+Decoding took 586.953s
+BLEU score on test data was BLEU(24.936)
+
+
+
+D=0.05
+-------------STATS------------
+Number of unigram vocab=495172 and total unigram=281199874 and actual size=813606
+Number of total BigramEndsWith a word is 8374230
+Number of bigram vocab=8374230 and total bigram=272126622 and actual size=12356713
+Number of trigram vocab=41627672 and total trigram=263053370 and actual size=82378579
+-------------END OF STATS------------
+Optimizing storage for hash maps...
+Optimization complete!
+Done building KNNaiveTrigramLanguageModel.
+Number of unigram vocab=495172 and total unigram=281199874 and actual size=569524
+Number of total BigramEndsWith a word is 8374230
+Number of bigram vocab=8374230 and total bigram=272126622 and actual size=9885370
+Number of trigram vocab=41627672 and total trigram=263053370 and actual size=61783934
+Memory usage is 1.0G
+Decoding took 641.551s
+BLEU score on test data was BLEU(24.212)
+
+
+
+
+
+D=0.1
+-------------STATS------------
+Number of unigram vocab=495172 and total unigram=281199874 and actual size=813606
+Number of total BigramEndsWith a word is 8374230
+Number of bigram vocab=8374230 and total bigram=272126622 and actual size=12356713
+Number of trigram vocab=41627672 and total trigram=263053370 and actual size=82378579
+-------------END OF STATS------------
+Optimizing storage for hash maps...
+Optimization complete!
+Done building KNNaiveTrigramLanguageModel.
+-------------STATS------------
+Number of unigram vocab=495172 and total unigram=281199874 and actual size=569524
+Number of total BigramEndsWith a word is 8374230
+Number of bigram vocab=8374230 and total bigram=272126622 and actual size=9885370
+Number of trigram vocab=41627672 and total trigram=263053370 and actual size=61783934
+-------------END OF STATS------------
+Memory usage is 1.0G
+Decoding took 616.733s
+BLEU score on test data was BLEU(24.439)
+
+
+
+
+D=0.15
+Decoding took 614.266s
+BLEU score on test data was BLEU(24.475)
+
+D=0.2
+Decoding took 682.024s
+BLEU score on test data was BLEU(24.562)
+
